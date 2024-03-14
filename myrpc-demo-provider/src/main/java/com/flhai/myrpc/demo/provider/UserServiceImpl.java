@@ -5,6 +5,7 @@ import com.flhai.myrpc.demo.api.User;
 import com.flhai.myrpc.demo.api.UserService;
 import org.springframework.stereotype.Component;
 
+
 @MyProvider
 @Component
 public class UserServiceImpl implements UserService {

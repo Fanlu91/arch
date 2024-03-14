@@ -2,25 +2,11 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<dependencies>
-		<dependency>
-			<groupId>org.projectlombok</groupId>
-			<artifactId>lombok</artifactId>
-		</dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot</artifactId>
-        </dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-autoconfigure</artifactId>
-		</dependency>
-	</dependencies>
 	<parent>
 		<groupId>com.flhai</groupId>
 		<artifactId>myrpc</artifactId>
 		<version>0.0.1-SNAPSHOT</version>
-		<relativePath>../pom.xml</relativePath>
+		<relativePath/>
 	</parent>
 	<groupId>com.flhai</groupId>
 	<artifactId>myrpc-demo-api</artifactId>
@@ -30,4 +16,29 @@
 	<properties>
 		<java.version>17</java.version>
 	</properties>
+	<dependencies>
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+		</dependency>
+	</dependencies>
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.8.1</version> <!-- 确保这里是最新或适用于您项目的版本 -->
+				<configuration>
+					<source>17</source> <!-- JDK 源码版本 -->
+					<target>17</target> <!-- 目标 JDK 版本 -->
+					<!-- 其他配置参数 -->
+				</configuration>
+			</plugin>
+			<!-- 其他插件 -->
+		</plugins>
+	</build>
 </project>

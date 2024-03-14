@@ -16,8 +16,8 @@
     <packaging>pom</packaging>
     <modules>
         <module>myrpc-core</module>
-        <module>myrpc-demo-provider</module>
         <module>myrpc-demo-api</module>
+        <module>myrpc-demo-provider</module>
     </modules>
     <properties>
         <java.version>17</java.version>
