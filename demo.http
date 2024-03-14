@@ -1,0 +1,11 @@
+### get user info
+POST http://localhost:8080
+Content-Type: application/json
+
+{
+  "service": "com.flhai.myrpc.demo.api.UserService",
+  "method": "findById",
+  "params": [1001]
+}
+
+###
