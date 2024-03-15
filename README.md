@@ -1,14 +1,12 @@
 
 
 
-# 记录一些坑
-
-## 新手坑
-1.idea 环境问题处理，没有识别注解
+# 新手坑
+## 1.idea 没有识别注解
 
 Enable Annotation Processing: 在 IntelliJ IDEA 中，确保启用了注解处理。你可以在 Settings 或 Preferences -> Build, Execution, Deployment -> Compiler -> Annotation Processors 中找到这个选项。
 
-2. 在初次完成provider尝试package时，报了无法找到myrpc-core myrpc-demo-api的问题，但是pom中清晰的引入了相关的dependency，idea也没有任何报错
+## 2. 在初次完成provider尝试package时，报了无法找到myrpc-core myrpc-demo-api的问题，但是pom中清晰的引入了相关的dependency，idea也没有任何报错
 
 这个问题排查了挺长时间，包括扔了一大堆报错给chatgpt，始终没能找到原因。
 后来几乎排除了所有的原因后，找到了原因是spring-boot-maven-plugin 的坑。
@@ -42,8 +40,63 @@ Spring Boot应用被打包成一个可执行jar（uber jar或fat jar）后，如
 </plugin>
 ```
 
-3. IDEA 没有自动整理import
+## 3. IDEA 没有自动整理import
 
 在IDEA中，打开File > Settings (对于Mac用户是IntelliJ IDEA > Preferences)。
 进入Editor > Code Style > Java，选择Imports标签页。
 在这里，你可以设置如何管理和优化imports，比如可以勾选`Optimize imports on the fly`来自动整理imports
+
+
+# 知识点
+## 4. @PostConstruct 注解
+   Person:
+- 介绍下jakarta.annotation.PostConstruct，它有哪些主要用途
+
+ChatGPT:
+- `jakarta.annotation.PostConstruct` 是 Java EE 5 引入的一个注解，用于在依赖项注入完成之后，但在类的任何方法使用前，执行初始化方法。这个注解最初在 `javax.annotation` 包下，但从 Jakarta EE 8 开始，随着 Java EE 转移到了 Eclipse Foundation 并更名为 Jakarta EE，相应地，`PostConstruct` 注解也被移到了 `jakarta.annotation` 包下。
+### 主要用途
+1. **资源初始化** ：最常见的用途是进行资源初始化，如启动时加载配置文件、初始化数据库连接池等。这确保了在类的其他方法被调用前，必要的资源已经准备就绪。
+2. **验证配置** ：可以用来验证依赖注入是否正确，例如检查是否所有必要的服务都已被注入，或者检查配置参数是否有效。
+3. **启动后执行逻辑** ：除了资源初始化外，`PostConstruct` 还常用于在对象创建并注入所有依赖之后，执行一些启动后的逻辑，比如启动后自动运行的任务。
+4. **减少对构造函数的复杂逻辑** ：通过将初始化逻辑从构造函数中分离出来，可以使构造函数保持简洁，专注于对象的构造，而不是其它初始化任务。
+5. **跨平台的一致性** ：随着 `PostConstruct` 注解的引入，Java EE 提供了一种标准化的方法来处理在构造对象后立即需要执行的初始化代码，提高了不同 Java EE 应用之间的一致性。
+### 使用示例
+
+```java
+import jakarta.annotation.PostConstruct;
+import javax.ejb.Singleton;
+import javax.ejb.Startup;
+
+@Singleton
+@Startup // 让这个 bean 在应用启动时就被创建和初始化
+public class StartupBean {
+
+    @PostConstruct
+    public void init() {
+        // 执行初始化逻辑，比如加载配置文件
+        System.out.println("系统启动，执行初始化任务...");
+    }
+}
+```
+
+
+在上面的示例中，`StartupBean` 类使用了 `@Singleton` 和 `@Startup` 注解，这意味着它会在应用启动时被创建。`@PostConstruct` 注解的 `init` 方法会在类的实例化及依赖注入完成后自动调用，这里可以放置初始化代码。
+
+Person:
+- 依赖项注入完成之后 怎么理解，如果直接new一个对象是用，PostConstruct会生效吗
+
+ChatGPT:
+- 依赖项注入（Dependency Injection，DI）是一种允许对象在不需要知道如何构造其依赖项的情况下接收它们的设计模式。在 Java EE 或 Spring 等依赖注入容器中，当一个对象被创建并管理时，这些容器负责注入对象所依赖的其他对象。依赖项注入完成之后，意味着所有标记为需要被注入的属性或者方法已经被容器处理，相应的依赖项都已经赋值完毕。
+
+对于 `@PostConstruct` 注解的方法来说，它被调用的时机是在依赖注入完成之后，即所有需要注入的属性都已经被注入值之后。这个特性确保了在执行初始化代码之前，所有必要的依赖项都已经就绪，使得初始化代码可以安全地使用这些依赖项。
+### 如果直接使用 `new` 关键字创建对象
+
+如果你直接使用 `new` 关键字创建一个对象的实例，依赖注入容器（如 Spring 容器或 Java EE 容器）并不会介入这个过程。这意味着：
+- 依赖注入不会发生。容器不会自动注入属性或者调用任何标记为注入点的构造函数、方法。
+- `@PostConstruct` 注解的方法不会被自动调用。因为容器不管理通过 `new` 关键字创建的对象，所以它也就不会处理 `@PostConstruct` 注解。
+
+简而言之，如果你直接使用 `new` 创建对象实例，`@PostConstruct` 和其他依赖注入相关的注解（如 `@Autowired` 在 Spring 中）不会生效。这些特性需要容器的支持才能工作，而通过 `new` 创建的对象实例不由容器管理。
+
+要让 `@PostConstruct` 生效，对象需要通过容器进行管理和创建。在 Spring 应用中，这通常通过组件扫描（标记为 `@Component` 或其它派生注解如 `@Service`、`@Repository`）实现，或者通过配置类明确声明 bean。在 Java EE 应用中，这通常通过标记为 `@Stateless`、`@Singleton` 等 EJB 注解，或者在 CDI（Contexts and Dependency Injection）中使用类似的机制。
+
+

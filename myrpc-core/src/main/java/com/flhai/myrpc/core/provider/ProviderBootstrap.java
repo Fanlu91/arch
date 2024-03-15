@@ -26,7 +26,8 @@ public class ProviderBootstrap implements ApplicationContextAware {
 
     private Map<String, Object> skeleton = new HashMap<>();
 
-    @PostConstruct
+
+    @PostConstruct // 相当于 init method
     public void buildProvider() {
         System.out.println("-----buildProvider");
         Map<String, Object> providers = applicationContext.getBeansWithAnnotation(MyProvider.class);
@@ -49,6 +50,7 @@ public class ProviderBootstrap implements ApplicationContextAware {
     public RpcResponse invokeRequest(RpcRequest request) {
         Object bean = skeleton.get(request.getService());
         try {
+            // getMethod 需要参数类型（方法可能重载），这里还没有拿到
 //            Method method = bean.getClass().getMethod(request.getMethod());
             Method method = findMethod(bean, request.getMethod());
             Object result = method.invoke(bean, request.getParams());
@@ -67,7 +69,6 @@ public class ProviderBootstrap implements ApplicationContextAware {
 //        System.out.println("methodName: " + methodName);
         Method[] methods = bean.getClass().getMethods();
         for (Method method : methods) {
-//            System.out.println("method: " + method.getName());
             if (method.getName().equals(methodName)) {
                 return method;
             }
