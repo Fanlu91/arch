@@ -6,13 +6,12 @@
         <groupId>com.flhai</groupId>
         <artifactId>myrpc</artifactId>
         <version>0.0.1-SNAPSHOT</version>
-<!--        <relativePath/>-->
     </parent>
     <groupId>com.flhai</groupId>
-    <artifactId>myrpc-core</artifactId>
+    <artifactId>myrpc-demo-consumer</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>myrpc-core</name>
-    <description>myrpc-core</description>
+    <name>myrpc-demo-consumer</name>
+    <description>myrpc-demo-consumer</description>
     <properties>
         <java.version>17</java.version>
     </properties>
@@ -21,6 +20,7 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
+
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
@@ -32,14 +32,34 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.squareup.okhttp3</groupId>
-            <artifactId>okhttp</artifactId>
-            <version>4.12.0</version>
+            <groupId>com.flhai</groupId>
+            <artifactId>myrpc-core</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+            <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>com.alibaba</groupId>
-            <artifactId>fastjson</artifactId>
-            <version>1.2.83</version>
+            <groupId>com.flhai</groupId>
+            <artifactId>myrpc-demo-api</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+            <scope>compile</scope>
         </dependency>
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <exclude>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                        </exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
 </project>
