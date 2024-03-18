@@ -17,6 +17,15 @@ Content-Type: application/json
   "method": "findOrderById",
   "params": [200]
 }
+### get order info
+POST http://localhost:8080
+Content-Type: application/json
+
+{
+  "service": "com.flhai.myrpc.demo.api.OrderService",
+  "method": "findOrderById",
+  "params": [404]
+}
 
 ### get hashcode
 POST http://localhost:8080

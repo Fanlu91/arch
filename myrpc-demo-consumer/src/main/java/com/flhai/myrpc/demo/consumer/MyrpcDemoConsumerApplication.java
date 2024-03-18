@@ -33,6 +33,9 @@ public class MyrpcDemoConsumerApplication {
             System.out.println(user);
             Order order = orderService.findOrderById(1);
             System.out.println(order);
+//            Order exOrder = orderService.findOrderById(404);
+//            System.out.println(exOrder);
+
         };
     }
 }

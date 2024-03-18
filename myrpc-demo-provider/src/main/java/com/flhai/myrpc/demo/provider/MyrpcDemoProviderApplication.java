@@ -39,9 +39,14 @@ public class MyrpcDemoProviderApplication {
     ApplicationRunner runner() {
         return args -> {
             var request = new RpcRequest();
-            request.setService("com.flhai.myrpc.demo.api.UserService");
-            request.setMethod("findById");
-            request.setParams(new Object[]{100});
+//            request.setService("com.flhai.myrpc.demo.api.UserService");
+//            request.setMethod("findById");
+//            request.setParams(new Object[]{100});
+
+
+            request.setService("com.flhai.myrpc.demo.api.OrderService");
+            request.setMethod("findOrderById");
+            request.setParams(new Object[]{404});
 
             RpcResponse response = invoke(request);
             System.out.println("return: " + response.getData());

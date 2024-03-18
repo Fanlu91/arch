@@ -49,19 +49,27 @@ public class ProviderBootstrap implements ApplicationContextAware {
 
     public RpcResponse invokeRequest(RpcRequest request) {
         Object bean = skeleton.get(request.getService());
+        RpcResponse rpcResponse = new RpcResponse();;
         try {
             // getMethod 需要参数类型（方法可能重载），这里还没有拿到
 //            Method method = bean.getClass().getMethod(request.getMethod());
             Method method = findMethod(bean, request.getMethod());
             Object result = method.invoke(bean, request.getParams());
-
-
-            return new RpcResponse(true, result);
-        } catch (InvocationTargetException e) {
-            throw new RuntimeException(e);
-        } catch (IllegalAccessException e) {
-            throw new RuntimeException(e);
+            rpcResponse.setStatus(true);
+            rpcResponse.setData(result);
+        }catch (InvocationTargetException e){
+            // 这里的e是InvocationTargetException 反射异常
+            // 我们从中取出原始异常
+            rpcResponse.setStatus(false);
+            rpcResponse.setEx(new RuntimeException(e.getTargetException().getMessage()));
+            rpcResponse.setData(e.getTargetException().getMessage());
+        }catch (Exception e){
+            // 这里的e是InvocationTargetException
+            // 我们从中取出原始异常
+            rpcResponse.setStatus(false);
+            rpcResponse.setEx(e);
         }
+        return rpcResponse;
     }
 
     private Method findMethod(Object bean, String methodName) {
@@ -75,6 +83,4 @@ public class ProviderBootstrap implements ApplicationContextAware {
         }
         return null;
     }
-
-
 }

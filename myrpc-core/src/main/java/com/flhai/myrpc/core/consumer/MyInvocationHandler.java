@@ -30,11 +30,17 @@ public class MyInvocationHandler implements InvocationHandler {
 
         RpcResponse rpcResponse = post(rpcRequest);
         if(rpcResponse.isStatus()){
-            JSONObject jsonResult = (JSONObject) rpcResponse.getData();
-            // 根据返回类型进行转换，返回一个java object
-            return jsonResult.toJavaObject(method.getReturnType());
+            Object data = rpcResponse.getData();
+            if(data instanceof JSONObject jsonResult) {
+                return jsonResult.toJavaObject(method.getReturnType());
+            } else {
+                return data;
+            }
+        }else {
+            Exception ex = rpcResponse.getEx();
+//            ex.printStackTrace();
+            throw new RuntimeException(ex);
         }
-        return null;
     }
 
     OkHttpClient okHttpClient = new OkHttpClient.Builder()
@@ -54,6 +60,8 @@ public class MyInvocationHandler implements InvocationHandler {
             String responseJson = okHttpClient.newCall(request).execute().body().string();
             System.out.println("responseJson = " + responseJson);
             return JSON.parseObject(responseJson,RpcResponse.class);
+        } catch (ClassCastException e) {
+            return new RpcResponse(false, null, e);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

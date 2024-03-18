@@ -8,8 +8,11 @@ import org.springframework.stereotype.Component;
 @Component
 @MyProvider
 public class OrderServiceImpl implements OrderService {
-@Override
+    @Override
     public Order findOrderById(Integer id) {
+        if (id == 404) {
+            throw new RuntimeException("order not found");
+        }
         Order order = new Order(id.longValue(), 10.0f);
         return order;
     }
