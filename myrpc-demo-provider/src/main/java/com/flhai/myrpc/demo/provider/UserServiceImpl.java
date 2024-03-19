@@ -20,9 +20,15 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public int getId() {
-        return 0;
+    public long getId(long id) {
+        return id;
     }
+
+    @Override
+    public long getId(User user) {
+        return user.getId();
+    }
+
 
     @Override
     public String getName() {
@@ -32,5 +38,20 @@ public class UserServiceImpl implements UserService {
     @Override
     public String getName(int number) {
         return "user name with " + number;
+    }
+
+    @Override
+    public int[] getIds() {
+        return new int[]{1, 2, 3};
+    }
+
+    @Override
+    public int[] getIds(int[] ids) {
+        return ids;
+    }
+
+    @Override
+    public long[] getLongIds() {
+        return new long[]{10, 20, 30};
     }
 }

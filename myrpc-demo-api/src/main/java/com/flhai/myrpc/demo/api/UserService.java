@@ -6,7 +6,17 @@ public interface UserService {
     // 支持重载
     User findById(int id, String name);
 
-    int getId();
+    long getId(long id);
+
+    long getId(User user);
+
     String getName();
+
     String getName(int number);
+
+    int[] getIds();
+
+    int[] getIds(int[] ids);
+
+    long[] getLongIds();
 }

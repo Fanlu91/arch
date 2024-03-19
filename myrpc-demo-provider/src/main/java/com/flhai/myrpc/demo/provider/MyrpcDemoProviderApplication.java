@@ -55,11 +55,11 @@ public class MyrpcDemoProviderApplication {
 //            response = invoke(request);
 //            System.out.println("return: " + response.getData());
 
-            request.setService("com.flhai.myrpc.demo.api.UserService");
-            request.setMethodSign("findById@2_int_java.lang.String");
-            request.setParams(new Object[]{100,"fhai"});
-            RpcResponse response = invoke(request);
-            System.out.println("return: " + response.toString());
+//            request.setService("com.flhai.myrpc.demo.api.UserService");
+//            request.setMethodSign("findById@2_int_java.lang.String");
+//            request.setParams(new Object[]{100,"fhai"});
+//            RpcResponse response = invoke(request);
+//            System.out.println("return: " + response.toString());
         };
     }
 }

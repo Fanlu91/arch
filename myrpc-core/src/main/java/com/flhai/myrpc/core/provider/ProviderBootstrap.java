@@ -4,6 +4,7 @@ import com.flhai.myrpc.core.annotation.MyProvider;
 import com.flhai.myrpc.core.api.RpcRequest;
 import com.flhai.myrpc.core.api.RpcResponse;
 import com.flhai.myrpc.core.util.MethodUtils;
+import com.flhai.myrpc.core.util.TypeUtils;
 import jakarta.annotation.PostConstruct;
 import lombok.Data;
 import meta.ProviderMeta;
@@ -15,6 +16,7 @@ import org.springframework.util.MultiValueMap;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -33,28 +35,24 @@ public class ProviderBootstrap implements ApplicationContextAware {
 
     @PostConstruct // 相当于 init method
     public void buildProvider() {
-//        System.out.println("-----buildProvider");
         Map<String, Object> providers = applicationContext.getBeansWithAnnotation(MyProvider.class);
         providers.values().forEach(provider -> {
-            getOnlyInterface(provider);
+            getInterfaces(provider);
         });
 
     }
 
-    // 只继承了一个接口
-    private void getOnlyInterface(Object o) {
-        Class<?>[] interfaces = o.getClass().getInterfaces();
-        if (interfaces.length != 1) {
-            throw new RuntimeException("provider must implement only one interface");
-        }
-        Class<?> providerInterface = interfaces[0];
-        Method[] methods = providerInterface.getMethods();
-        for (Method method : methods) {
-            if (MethodUtils.checkLocalMethod(method)) {
-                continue;
+    private void getInterfaces(Object provider) {
+        Class<?>[] interfaces = provider.getClass().getInterfaces();
+        Arrays.stream(interfaces).forEach(providerInterface -> {
+            Method[] methods = providerInterface.getMethods();
+            for (Method method : methods) {
+                if (MethodUtils.checkLocalMethod(method)) {
+                    continue;
+                }
+                createProvider(providerInterface, provider, method);
             }
-            createProvider(providerInterface, o, method);
-        }
+        });
     }
 
     private void createProvider(Class<?> providerInterface, Object o, Method method) {
@@ -75,13 +73,15 @@ public class ProviderBootstrap implements ApplicationContextAware {
         try {
             // getMethod 需要参数类型（方法可能重载），这里还没有拿到
 //            Method method = bean.getClass().getMethod(request.getMethod());
+            // Deprecated method
 //            Method method = findMethod(bean, request.getMethodSign(), request.getParams());
-            ProviderMeta providerMeta = providerMetas.stream().filter(
-                            p -> p.getSignName().equals(methodSign)
-                    ).findFirst()
-                    .orElseThrow(() -> new RuntimeException("no such method with sign" + methodSign + " in provider " + request.getService()));
+            ProviderMeta providerMeta = getProviderMeta(request, methodSign, providerMetas);
             Method method = providerMeta.getMethod();
-            Object result = method.invoke(providerMeta.getServiceImpl(), request.getParams());
+            Object[] params = processParams(request.getParams(), method.getParameterTypes());
+//            System.out.println("params length = " + params.length);
+//            System.out.println(params[0].getClass().getName());
+//            System.out.println(providerMeta.getSignName());
+            Object result = method.invoke(providerMeta.getServiceImpl(), params);
             rpcResponse.setStatus(true);
             rpcResponse.setData(result);
         } catch (InvocationTargetException e) {
@@ -91,16 +91,38 @@ public class ProviderBootstrap implements ApplicationContextAware {
             rpcResponse.setEx(new RuntimeException(e.getTargetException().getMessage()));
             rpcResponse.setData(e.getTargetException().getMessage());
         } catch (Exception e) {
-            // 这里的e是InvocationTargetException
-            // 我们从中取出原始异常
+            e.printStackTrace();
             rpcResponse.setStatus(false);
             rpcResponse.setEx(e);
         }
         return rpcResponse;
     }
 
+    private static ProviderMeta getProviderMeta(RpcRequest request, String methodSign, List<ProviderMeta> providerMetas) {
+        ProviderMeta providerMeta = providerMetas.stream().filter(
+                        p -> p.getSignName().equals(methodSign)
+                ).findFirst()
+                .orElseThrow(() -> new RuntimeException("no such method with sign"
+                        + methodSign + " in provider " + request.getService()));
+        return providerMeta;
+    }
+
+    private Object[] processParams(Object[] params, Class<?>[] parameterTypes) {
+        if (params == null || params.length == 0) {
+            return new Object[0];
+        }
+        Object[] result = new Object[params.length];
+        for (int i = 0; i < params.length; i++) {
+            result[i] = TypeUtils.cast(params[i], parameterTypes[i]);
+//            System.out.println("-----param [i] = " + result[i]);
+        }
+
+        return result;
+    }
+
     /**
      * 通过方法名和参数类型查找方法, 用于处理重载的情况.
+     * 已替换为method sign的方式
      *
      * @param bean
      * @param methodName

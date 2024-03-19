@@ -1,6 +1,7 @@
 package com.flhai.myrpc.core.consumer;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.flhai.myrpc.core.api.RpcRequest;
 import com.flhai.myrpc.core.api.RpcResponse;
@@ -12,6 +13,8 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.util.concurrent.TimeUnit;
 
+import static com.flhai.myrpc.core.util.TypeUtils.cast;
+
 public class MyInvocationHandler implements InvocationHandler {
 
     Class<?> serviceClass;
@@ -21,6 +24,7 @@ public class MyInvocationHandler implements InvocationHandler {
 
         this.serviceClass = serviceClass;
     }
+
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
@@ -35,8 +39,10 @@ public class MyInvocationHandler implements InvocationHandler {
             Object data = rpcResponse.getData();
             if(data instanceof JSONObject jsonResult) {
                 return jsonResult.toJavaObject(method.getReturnType());
-            } else {
-                return data;
+            }else if(data instanceof JSONArray jsonArray){
+                return jsonArray.toJavaObject(method.getReturnType());
+            }else {
+                return cast(data,method.getReturnType());
             }
         }else {
             Exception ex = rpcResponse.getEx();
@@ -44,6 +50,7 @@ public class MyInvocationHandler implements InvocationHandler {
             throw new RuntimeException(ex);
         }
     }
+
 
     OkHttpClient okHttpClient = new OkHttpClient.Builder()
             .connectionPool(new ConnectionPool(16, 10, TimeUnit.MINUTES))

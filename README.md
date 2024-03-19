@@ -99,4 +99,22 @@ ChatGPT:
 
 要让 `@PostConstruct` 生效，对象需要通过容器进行管理和创建。在 Spring 应用中，这通常通过组件扫描（标记为 `@Component` 或其它派生注解如 `@Service`、`@Repository`）实现，或者通过配置类明确声明 bean。在 Java EE 应用中，这通常通过标记为 `@Stateless`、`@Singleton` 等 EJB 注解，或者在 CDI（Contexts and Dependency Injection）中使用类似的机制。
 
+## Pattern Matching 
+Pattern matching involves testing whether an object has a particular structure, then extracting data from that object if there's a match.
 
+```
+if(rpcResponse.isStatus()){
+    Object data = rpcResponse.getData();
+    if(data instanceof JSONObject jsonResult) {
+        return jsonResult.toJavaObject(method.getReturnType());  // 1
+    }else if(data instanceof JSONArray jsonArray){
+        return jsonArray.toJavaObject(method.getReturnType());  // 2
+    }else {
+        return cast(data,method.getReturnType());
+    }
+}
+```
+data instanceof JSONObject jsonResult 和 data instanceof JSONArray jsonArray 检查data对象是否是特定类型（JSONObject 或 JSONArray），
+**并且如果是**，就将该对象自动转换为相应的类型变量（jsonResult 或 jsonArray）。这种自动转换是Java 14引入的模式匹配（Pattern Matching）for instanceof的特性的一个例子，它简化了代码并减少了需要进行显式类型转换的地方。
+所以注释中的 1 和 2 两块代码并非等价，前者处理的是JSONObject类型的数据，后者处理的是JSONArray类型的数据。
+- https://docs.oracle.com/en/java/javase/17/language/pattern-matching.html
