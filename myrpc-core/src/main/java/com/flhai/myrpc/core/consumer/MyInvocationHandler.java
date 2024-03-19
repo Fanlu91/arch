@@ -4,10 +4,12 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.flhai.myrpc.core.api.RpcRequest;
 import com.flhai.myrpc.core.api.RpcResponse;
+import com.flhai.myrpc.core.util.MethodUtils;
 import okhttp3.*;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
 import java.util.concurrent.TimeUnit;
 
 public class MyInvocationHandler implements InvocationHandler {
@@ -21,11 +23,11 @@ public class MyInvocationHandler implements InvocationHandler {
     }
 
     @Override
-    public Object invoke(Object proxy, java.lang.reflect.Method method, Object[] args) throws Throwable {
+    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 
         RpcRequest rpcRequest = new RpcRequest();
         rpcRequest.setService(serviceClass.getCanonicalName());
-        rpcRequest.setMethod(method.getName());
+        rpcRequest.setMethodSign(MethodUtils.methodSign(method));
         rpcRequest.setParams(args);
 
         RpcResponse rpcResponse = post(rpcRequest);
@@ -44,10 +46,10 @@ public class MyInvocationHandler implements InvocationHandler {
     }
 
     OkHttpClient okHttpClient = new OkHttpClient.Builder()
-            .connectionPool(new ConnectionPool(16, 60, TimeUnit.MINUTES))
-            .readTimeout(1, TimeUnit.SECONDS)
-            .writeTimeout(1, TimeUnit.SECONDS)
-            .connectTimeout(1, TimeUnit.SECONDS)
+            .connectionPool(new ConnectionPool(16, 10, TimeUnit.MINUTES))
+            .readTimeout(1000, TimeUnit.SECONDS)
+            .writeTimeout(1000, TimeUnit.SECONDS)
+            .connectTimeout(1000, TimeUnit.SECONDS)
             .build();
     private RpcResponse post(RpcRequest rpcRequest) {
         String reqJson = JSON.toJSONString(rpcRequest);

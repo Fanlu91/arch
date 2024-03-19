@@ -9,6 +9,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class RpcRequest {
     private String service; // interface com.flhai.myrpc.demo.api.UserService
-    private String method; // findById
+    private String methodSign; // findById
     private Object[] params; //
 }

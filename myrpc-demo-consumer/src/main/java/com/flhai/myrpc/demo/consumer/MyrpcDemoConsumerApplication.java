@@ -2,7 +2,6 @@ package com.flhai.myrpc.demo.consumer;
 
 import com.flhai.myrpc.core.annotation.MyConsumer;
 import com.flhai.myrpc.core.consumer.ConsumerConfig;
-import com.flhai.myrpc.demo.api.Order;
 import com.flhai.myrpc.demo.api.OrderService;
 import com.flhai.myrpc.demo.api.User;
 import com.flhai.myrpc.demo.api.UserService;
@@ -31,11 +30,16 @@ public class MyrpcDemoConsumerApplication {
         return args -> {
             User user = userService.findById(1);
             System.out.println(user);
-            Order order = orderService.findOrderById(1);
-            System.out.println(order);
+            User user2 = userService.findById(1, "flhai");
+            System.out.println(user2);
+            System.out.println(userService.getId());
+            System.out.println(userService.getName());
+            System.out.println(userService.getName(100));
+
+//            Order order = orderService.findOrderById(1);
+//            System.out.println(order);
 //            Order exOrder = orderService.findOrderById(404);
 //            System.out.println(exOrder);
-
         };
     }
 }
