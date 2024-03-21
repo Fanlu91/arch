@@ -72,9 +72,9 @@ public class ProviderBootstrap implements ApplicationContextAware {
         List<ProviderMeta> providerMetas = skeleton.get(request.getService());
         try {
             // getMethod 需要参数类型（方法可能重载），这里还没有拿到
-//            Method method = bean.getClass().getMethod(request.getMethod());
+            //  Method method = bean.getClass().getMethod(request.getMethod());
             // Deprecated method
-//            Method method = findMethod(bean, request.getMethodSign(), request.getParams());
+            //  Method method = findMethod(bean, request.getMethodSign(), request.getParams());
             ProviderMeta providerMeta = getProviderMeta(request, methodSign, providerMetas);
             Method method = providerMeta.getMethod();
             Object[] params = processParams(request.getParams(), method.getParameterTypes());

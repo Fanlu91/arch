@@ -53,7 +53,14 @@ public class TypeUtils {
                     return array;
                 } else {
                     // 对象类型数组可以直接使用toArray转换
-                    return jsonArray.toArray((Object[]) Array.newInstance(type.getComponentType(), jsonArray.size()));
+//                    return jsonArray.toArray((Object[]) Array.newInstance(type.getComponentType(), jsonArray.size()));
+                    // 创建一个指定类型的数组实例
+                    Object array = Array.newInstance(type.getComponentType(), jsonArray.size());
+                    for (int i = 0; i < jsonArray.size(); i++) {
+                        // 使用toJavaObject转换每个元素，确保类型匹配
+                        Array.set(array, i, jsonArray.getJSONObject(i).toJavaObject(type.getComponentType()));
+                    }
+                    return array;
                 }
             }
         }
@@ -68,7 +75,7 @@ public class TypeUtils {
             return Double.parseDouble(origin.toString());
         } else if (type == boolean.class || type == Boolean.class) {
             return Boolean.parseBoolean(origin.toString());
-        }else if (type == byte.class || type == Byte.class) {
+        } else if (type == byte.class || type == Byte.class) {
             return Byte.parseByte(origin.toString());
         } else if (type == short.class || type == Short.class) {
             return Short.parseShort(origin.toString());

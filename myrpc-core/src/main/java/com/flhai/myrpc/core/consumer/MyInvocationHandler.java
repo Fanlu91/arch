@@ -21,7 +21,6 @@ public class MyInvocationHandler implements InvocationHandler {
     final MediaType JSONTYPE = MediaType.parse("application/json; charset=utf-8");
 
     public MyInvocationHandler(Class<?> serviceClass) {
-
         this.serviceClass = serviceClass;
     }
 
@@ -37,11 +36,17 @@ public class MyInvocationHandler implements InvocationHandler {
         RpcResponse rpcResponse = post(rpcRequest);
         if(rpcResponse.isStatus()){
             Object data = rpcResponse.getData();
+            System.out.println("data = " + data);
+            System.out.println("method.getReturnType() = " + method.getReturnType());
+            System.out.println("method.getGenericReturnType = " + method.getGenericReturnType());
             if(data instanceof JSONObject jsonResult) {
-                return jsonResult.toJavaObject(method.getReturnType());
+                System.out.println("jsonResult = " + jsonResult);
+                return jsonResult.toJavaObject(method.getGenericReturnType());
             }else if(data instanceof JSONArray jsonArray){
-                return jsonArray.toJavaObject(method.getReturnType());
+                System.out.println("jsonArray = " + jsonArray);
+                return jsonArray.toJavaObject(method.getGenericReturnType());
             }else {
+                System.out.println("cast data = " + data);
                 return cast(data,method.getReturnType());
             }
         }else {

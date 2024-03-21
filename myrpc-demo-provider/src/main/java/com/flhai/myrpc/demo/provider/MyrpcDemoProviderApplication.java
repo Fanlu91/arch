@@ -23,7 +23,6 @@ public class MyrpcDemoProviderApplication {
         SpringApplication.run(MyrpcDemoProviderApplication.class, args);
     }
 
-
     @Autowired
     ProviderBootstrap providerBootstrap;
 
@@ -38,7 +37,7 @@ public class MyrpcDemoProviderApplication {
     @Bean
     ApplicationRunner runner() {
         return args -> {
-            var request = new RpcRequest();
+//            var request = new RpcRequest();
 //            request.setService("com.flhai.myrpc.demo.api.UserService");
 //            request.setMethod("findById");
 //            request.setParams(new Object[]{100});
