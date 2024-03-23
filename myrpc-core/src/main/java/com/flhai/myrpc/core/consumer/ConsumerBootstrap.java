@@ -2,6 +2,7 @@ package com.flhai.myrpc.core.consumer;
 
 import com.flhai.myrpc.core.annotation.MyConsumer;
 import com.flhai.myrpc.core.api.LoadBalancer;
+import com.flhai.myrpc.core.api.RegistryCenter;
 import com.flhai.myrpc.core.api.Router;
 import com.flhai.myrpc.core.api.RpcContext;
 import lombok.AllArgsConstructor;
@@ -47,11 +48,13 @@ public class ConsumerBootstrap implements ApplicationContextAware, EnvironmentAw
         rpcContext.setRouter(applicationContext.getBean(Router.class));
         rpcContext.setLoadBalancer(applicationContext.getBean(LoadBalancer.class));
 
-        String urls = environment.getProperty("myrpc.providers", "");
-        if (urls.isEmpty()) {
-            throw new RuntimeException("myrpc.providers is empty");
-        }
-        List<String> providers = List.of(urls.split(","));
+        RegistryCenter registryCenter = applicationContext.getBean(RegistryCenter.class);
+
+//        String urls = environment.getProperty("myrpc.providers", "");
+//        if (urls.isEmpty()) {
+//            throw new RuntimeException("myrpc.providers is empty");
+//        }
+//        List<String> providers = List.of(urls.split(","));
 
 
         String[] beanDefinitionNames = applicationContext.getBeanDefinitionNames();
@@ -66,8 +69,10 @@ public class ConsumerBootstrap implements ApplicationContextAware, EnvironmentAw
                     String serviceName = serviceClass.getCanonicalName();
                     Object consumer = stub.get(serviceName);
                     if (consumer == null) {
-                        consumer = createComsumer(serviceClass, rpcContext, providers);
+//                        consumer = createComsumer(serviceClass, rpcContext, providers);
+                        consumer = createComsumerFromRegistry(serviceClass, rpcContext, registryCenter);
                     }
+
                     field.setAccessible(true);
                     try {
                         field.set(bean, consumer);
@@ -80,11 +85,21 @@ public class ConsumerBootstrap implements ApplicationContextAware, EnvironmentAw
         }
     }
 
+
     private Object createComsumer(Class<?> serviceClass, RpcContext context, List<String> providers) {
-        System.out.println("------------createComsumer called");
+        System.out.println("------------createConsumer called");
         return Proxy.newProxyInstance(serviceClass.getClassLoader(),
                 new Class[]{serviceClass},
                 new MyInvocationHandler(serviceClass, context, providers));
+    }
+
+    private Object createComsumerFromRegistry(Class<?> serviceClass, RpcContext rpcContext, RegistryCenter registryCenter) {
+        System.out.println("------------createConsumerFromRegistry called");
+        String serviceName = serviceClass.getCanonicalName();
+        List<String> providers = registryCenter.fetchAll(serviceName);
+        return Proxy.newProxyInstance(serviceClass.getClassLoader(),
+                new Class[]{serviceClass},
+                new MyInvocationHandler(serviceClass, rpcContext, providers));
     }
 
     private List<Field> findAnnotatedField(Class<?> clazz) {
