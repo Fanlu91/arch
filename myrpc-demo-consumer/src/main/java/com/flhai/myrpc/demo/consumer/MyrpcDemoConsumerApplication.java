@@ -2,7 +2,6 @@ package com.flhai.myrpc.demo.consumer;
 
 import com.flhai.myrpc.core.annotation.MyConsumer;
 import com.flhai.myrpc.core.consumer.ConsumerConfig;
-import com.flhai.myrpc.demo.api.OrderService;
 import com.flhai.myrpc.demo.api.User;
 import com.flhai.myrpc.demo.api.UserService;
 import org.springframework.boot.ApplicationRunner;
@@ -10,6 +9,8 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -18,17 +19,26 @@ import java.util.Map;
 
 @Import({ConsumerConfig.class})
 @SpringBootApplication
+@RestController
 public class MyrpcDemoConsumerApplication {
 
     @MyConsumer
     UserService userService;
 
-    @MyConsumer
-    OrderService orderService;
+//    @MyConsumer
+//    OrderService orderService;
+
+    @RequestMapping("/")
+    public User findBy(int id) {
+        // find the service
+        System.out.println("findBy id = " + id);
+        return userService.findById(id);
+    }
 
     public static void main(String[] args) {
         SpringApplication.run(MyrpcDemoConsumerApplication.class, args);
     }
+
 
     @Bean
     public ApplicationRunner runner() {

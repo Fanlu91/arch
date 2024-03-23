@@ -17,9 +17,10 @@ public class UserServiceImpl implements UserService {
     @Autowired
     Environment environment;
 
+    // 通过端口号区分不同的服务提供者
     @Override
     public User findById(int id) {
-        return new User(id, "KK-"
+        return new User(id, "my-"
                 + environment.getProperty("server.port")
                 + "_" + System.currentTimeMillis());
     }

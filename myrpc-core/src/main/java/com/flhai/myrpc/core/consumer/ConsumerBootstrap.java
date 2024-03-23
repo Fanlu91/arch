@@ -1,12 +1,17 @@
 package com.flhai.myrpc.core.consumer;
 
 import com.flhai.myrpc.core.annotation.MyConsumer;
+import com.flhai.myrpc.core.api.LoadBalancer;
+import com.flhai.myrpc.core.api.Router;
+import com.flhai.myrpc.core.api.RpcContext;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.EnvironmentAware;
+import org.springframework.core.env.Environment;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Proxy;
@@ -18,9 +23,15 @@ import java.util.Map;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ConsumerBootstrap implements ApplicationContextAware {
+public class ConsumerBootstrap implements ApplicationContextAware, EnvironmentAware {
 
     ApplicationContext applicationContext;
+    Environment environment;
+
+    @Override
+    public void setEnvironment(Environment environment) {
+        this.environment = environment;
+    }
 
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
@@ -29,24 +40,37 @@ public class ConsumerBootstrap implements ApplicationContextAware {
 
     private Map<String, Object> stub = new HashMap<>();
 
-    public void setApplicationContext() {
-        System.out.println("------------setApplicationContext called");
+    public void startApplication() {
+        System.out.println("------------startApplication called");
+
+        RpcContext rpcContext = new RpcContext();
+        rpcContext.setRouter(applicationContext.getBean(Router.class));
+        rpcContext.setLoadBalancer(applicationContext.getBean(LoadBalancer.class));
+
+        String urls = environment.getProperty("myrpc.providers", "");
+        if (urls.isEmpty()) {
+            throw new RuntimeException("myrpc.providers is empty");
+        }
+        List<String> providers = List.of(urls.split(","));
+
+
         String[] beanDefinitionNames = applicationContext.getBeanDefinitionNames();
+
         for (String beanName : beanDefinitionNames) {
             Object bean = applicationContext.getBean(beanName);
             List<Field> annotatedFields = findAnnotatedField(bean.getClass());
-            if(annotatedFields.size() > 0) {
-                System.out.println("------------"+beanName + " has annotated fields");
+            if (annotatedFields.size() > 0) {
+                System.out.println("------------" + beanName + " has annotated fields");
                 annotatedFields.stream().forEach(field -> {
                     Class<?> serviceClass = field.getType();
                     String serviceName = serviceClass.getCanonicalName();
                     Object consumer = stub.get(serviceName);
                     if (consumer == null) {
-                        consumer = createComsumer(serviceClass);
+                        consumer = createComsumer(serviceClass, rpcContext, providers);
                     }
                     field.setAccessible(true);
                     try {
-                        field.set(bean,consumer);
+                        field.set(bean, consumer);
                     } catch (IllegalAccessException e) {
                         throw new RuntimeException(e);
                     }
@@ -56,9 +80,11 @@ public class ConsumerBootstrap implements ApplicationContextAware {
         }
     }
 
-    private Object createComsumer(Class<?> serviceClass) {
+    private Object createComsumer(Class<?> serviceClass, RpcContext context, List<String> providers) {
         System.out.println("------------createComsumer called");
-        return Proxy.newProxyInstance(serviceClass.getClassLoader(), new Class[]{serviceClass}, new MyInvocationHandler(serviceClass));
+        return Proxy.newProxyInstance(serviceClass.getClassLoader(),
+                new Class[]{serviceClass},
+                new MyInvocationHandler(serviceClass, context, providers));
     }
 
     private List<Field> findAnnotatedField(Class<?> clazz) {
@@ -74,4 +100,6 @@ public class ConsumerBootstrap implements ApplicationContextAware {
         }
         return result;
     }
+
+
 }
