@@ -1,5 +1,8 @@
 package com.flhai.myrpc.core.api;
 
+
+import com.flhai.myrpc.core.registry.ChangedListener;
+
 import java.util.List;
 
 public interface RegistryCenter {
@@ -15,7 +18,9 @@ public interface RegistryCenter {
     // consumer
 
     List<String> fetchAll(String serviceName); // c
-//    void subscribe(String serviceName, NotifyListener listener); // c
+
+    void subscribe(String serviceName, ChangedListener listener); // c
+
     static class StaticRegistryCenter implements RegistryCenter {
 
         List<String> serviceList;
@@ -43,6 +48,11 @@ public interface RegistryCenter {
         @Override
         public List<String> fetchAll(String serviceName) {
             return serviceList;
+        }
+
+        @Override
+        public void subscribe(String serviceName, ChangedListener listener) {
+
         }
     }
 

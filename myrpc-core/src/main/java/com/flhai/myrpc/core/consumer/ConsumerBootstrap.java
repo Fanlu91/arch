@@ -5,6 +5,8 @@ import com.flhai.myrpc.core.api.LoadBalancer;
 import com.flhai.myrpc.core.api.RegistryCenter;
 import com.flhai.myrpc.core.api.Router;
 import com.flhai.myrpc.core.api.RpcContext;
+import com.flhai.myrpc.core.registry.ChangedListener;
+import com.flhai.myrpc.core.registry.Event;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -70,7 +72,7 @@ public class ConsumerBootstrap implements ApplicationContextAware, EnvironmentAw
                     Object consumer = stub.get(serviceName);
                     if (consumer == null) {
 //                        consumer = createComsumer(serviceClass, rpcContext, providers);
-                        consumer = createComsumerFromRegistry(serviceClass, rpcContext, registryCenter);
+                        consumer = createConsumerFromRegistry(serviceClass, rpcContext, registryCenter);
                     }
 
                     field.setAccessible(true);
@@ -86,20 +88,33 @@ public class ConsumerBootstrap implements ApplicationContextAware, EnvironmentAw
     }
 
 
-    private Object createComsumer(Class<?> serviceClass, RpcContext context, List<String> providers) {
-        System.out.println("------------createConsumer called");
-        return Proxy.newProxyInstance(serviceClass.getClassLoader(),
-                new Class[]{serviceClass},
-                new MyInvocationHandler(serviceClass, context, providers));
-    }
-
-    private Object createComsumerFromRegistry(Class<?> serviceClass, RpcContext rpcContext, RegistryCenter registryCenter) {
+    private Object createConsumerFromRegistry(Class<?> serviceClass, RpcContext rpcContext, RegistryCenter registryCenter) {
         System.out.println("------------createConsumerFromRegistry called");
         String serviceName = serviceClass.getCanonicalName();
         List<String> providers = registryCenter.fetchAll(serviceName);
+        providers.forEach(System.out::println);
+
+
+        registryCenter.subscribe(serviceName, new ChangedListener() {
+            @Override
+            public void fireChange(Event event) {
+                providers.clear();
+                providers.addAll(event.getData());
+            }
+        });
+        //上面代码的 lambda 简化写法如下，我觉得可读性有所降低
+        /*registryCenter.subscribe(serviceName, event -> {
+            providers.clear();
+            providers.addAll(event.getData());
+        });*/
+        return createConsumer(serviceClass, rpcContext, providers);
+
+    }
+
+    private Object createConsumer(Class<?> serviceClass, RpcContext context, List<String> providers) {
         return Proxy.newProxyInstance(serviceClass.getClassLoader(),
                 new Class[]{serviceClass},
-                new MyInvocationHandler(serviceClass, rpcContext, providers));
+                new MyInvocationHandler(serviceClass, context, providers));
     }
 
     private List<Field> findAnnotatedField(Class<?> clazz) {
