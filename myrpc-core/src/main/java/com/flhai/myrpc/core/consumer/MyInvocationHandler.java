@@ -1,9 +1,9 @@
 package com.flhai.myrpc.core.consumer;
 
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
-import com.flhai.myrpc.core.api.*;
+import com.flhai.myrpc.core.api.RpcContext;
+import com.flhai.myrpc.core.api.RpcRequest;
+import com.flhai.myrpc.core.api.RpcResponse;
 import com.flhai.myrpc.core.util.MethodUtils;
 import okhttp3.*;
 
@@ -13,7 +13,7 @@ import java.lang.reflect.Method;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import static com.flhai.myrpc.core.util.TypeUtils.cast;
+import static com.flhai.myrpc.core.util.TypeUtils.castMethodReturnType;
 
 public class MyInvocationHandler implements InvocationHandler {
 
@@ -44,26 +44,13 @@ public class MyInvocationHandler implements InvocationHandler {
         RpcResponse rpcResponse = post(rpcRequest, url);
         if (rpcResponse.isStatus()) {
             Object data = rpcResponse.getData();
-            System.out.println("data = " + data);
-            System.out.println("method.getReturnType() = " + method.getReturnType());
-            System.out.println("method.getGenericReturnType = " + method.getGenericReturnType());
-            if (data instanceof JSONObject jsonResult) {
-                System.out.println("jsonResult = " + jsonResult);
-                return jsonResult.toJavaObject(method.getGenericReturnType());
-            } else if (data instanceof JSONArray jsonArray) {
-                System.out.println("jsonArray = " + jsonArray);
-                return jsonArray.toJavaObject(method.getGenericReturnType());
-            } else {
-                System.out.println("cast data = " + data);
-                return cast(data, method.getReturnType());
-            }
+            return castMethodReturnType(method, data);
         } else {
             Exception ex = rpcResponse.getEx();
 //            ex.printStackTrace();
             throw new RuntimeException(ex);
         }
     }
-
 
     OkHttpClient okHttpClient = new OkHttpClient.Builder()
             .connectionPool(new ConnectionPool(16, 10, TimeUnit.MINUTES))

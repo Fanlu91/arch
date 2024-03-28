@@ -1,7 +1,11 @@
 package com.flhai.myrpc.core.util;
 
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 public class MethodUtils {
     public static boolean checkLocalMethod(final String method) {
@@ -58,5 +62,19 @@ public class MethodUtils {
         else if (primitiveType.equals(short.class)) return wrapperType.equals(Short.class);
         // No need for else, as all cases are covered
         return false;
+    }
+
+    public static List<Field> findAnnotatedField(Class<?> clazz,Class<? extends Annotation> annotationClass) {
+        List<Field> result = new ArrayList<>();
+        while (clazz != null && clazz != Object.class) {
+            Field[] fields = clazz.getDeclaredFields();
+            for (Field field : fields) {
+                if (field.isAnnotationPresent(annotationClass)) {
+                    result.add(field);
+                }
+            }
+            clazz = clazz.getSuperclass();
+        }
+        return result;
     }
 }

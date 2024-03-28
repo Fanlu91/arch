@@ -18,10 +18,11 @@ import org.springframework.core.env.Environment;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Proxy;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import static com.flhai.myrpc.core.util.MethodUtils.findAnnotatedField;
 
 @Data
 @AllArgsConstructor
@@ -63,7 +64,7 @@ public class ConsumerBootstrap implements ApplicationContextAware, EnvironmentAw
 
         for (String beanName : beanDefinitionNames) {
             Object bean = applicationContext.getBean(beanName);
-            List<Field> annotatedFields = findAnnotatedField(bean.getClass());
+            List<Field> annotatedFields = findAnnotatedField(bean.getClass(), MyConsumer.class);
             if (annotatedFields.size() > 0) {
                 System.out.println("------------" + beanName + " has annotated fields");
                 annotatedFields.stream().forEach(field -> {
@@ -108,27 +109,12 @@ public class ConsumerBootstrap implements ApplicationContextAware, EnvironmentAw
             providers.addAll(event.getData());
         });*/
         return createConsumer(serviceClass, rpcContext, providers);
-
     }
 
     private Object createConsumer(Class<?> serviceClass, RpcContext context, List<String> providers) {
         return Proxy.newProxyInstance(serviceClass.getClassLoader(),
                 new Class[]{serviceClass},
                 new MyInvocationHandler(serviceClass, context, providers));
-    }
-
-    private List<Field> findAnnotatedField(Class<?> clazz) {
-        List<Field> result = new ArrayList<>();
-        while (clazz != null && clazz != Object.class) {
-            Field[] fields = clazz.getDeclaredFields();
-            for (Field field : fields) {
-                if (field.isAnnotationPresent(MyConsumer.class)) {
-                    result.add(field);
-                }
-            }
-            clazz = clazz.getSuperclass();
-        }
-        return result;
     }
 
 
