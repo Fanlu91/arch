@@ -1,14 +1,18 @@
 package com.flhai.myrpc.core.provider;
 
 import com.flhai.myrpc.core.annotation.MyProvider;
+import com.flhai.myrpc.core.api.RegistryCenter;
 import com.flhai.myrpc.core.api.RpcRequest;
 import com.flhai.myrpc.core.api.RpcResponse;
+import com.flhai.myrpc.core.meta.ProviderMeta;
 import com.flhai.myrpc.core.util.MethodUtils;
 import com.flhai.myrpc.core.util.TypeUtils;
 import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 import lombok.Data;
-import com.flhai.myrpc.core.meta.ProviderMeta;
+import lombok.SneakyThrows;
 import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.util.LinkedMultiValueMap;
@@ -16,6 +20,7 @@ import org.springframework.util.MultiValueMap;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.net.InetAddress;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -23,6 +28,11 @@ import java.util.Map;
 @Data
 public class ProviderBootstrap implements ApplicationContextAware {
     ApplicationContext applicationContext;
+
+    private String instanceAddress;
+
+    @Value("${server.port}")
+    private String port;
 
     // 据说可以省略
     @Override
@@ -34,15 +44,38 @@ public class ProviderBootstrap implements ApplicationContextAware {
 
 
     @PostConstruct // 相当于 init method
-    public void buildProvider() {
+    public void init() {
         Map<String, Object> providers = applicationContext.getBeansWithAnnotation(MyProvider.class);
         providers.values().forEach(provider -> {
-            getInterfaces(provider);
+            genInterfaces(provider);
         });
 
     }
 
-    private void getInterfaces(Object provider) {
+    @SneakyThrows
+    // 不放在init中因为这时spring还没有加载完成，服务可能不可用
+    // 在ProviderConfig中调用
+    public void start() {
+        instanceAddress = InetAddress.getLocalHost().getHostAddress() + "_" + port;
+        skeleton.keySet().forEach(this::registerProvider);
+    }
+
+    @PreDestroy
+    public void stop() {
+        skeleton.keySet().forEach(this::unregisterProvider);
+    }
+
+    private void registerProvider(String serviceName) {
+        RegistryCenter registryCenter = applicationContext.getBean(RegistryCenter.class);
+        registryCenter.register(serviceName, instanceAddress);
+    }
+
+    private void unregisterProvider(String serviceName) {
+        RegistryCenter registryCenter = applicationContext.getBean(RegistryCenter.class);
+        registryCenter.unregister(serviceName, instanceAddress);
+    }
+
+    private void genInterfaces(Object provider) {
         Class<?>[] interfaces = provider.getClass().getInterfaces();
         Arrays.stream(interfaces).forEach(providerInterface -> {
             Method[] methods = providerInterface.getMethods();

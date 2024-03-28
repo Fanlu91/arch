@@ -15,13 +15,14 @@ public class ZkRegistryCenter implements RegistryCenter {
 
     @Override
     public void start() {
+        System.out.println("---start zk registry client");
         RetryPolicy retryPolicy = new ExponentialBackoffRetry(1000, 3);
         client = CuratorFrameworkFactory.builder()
                 .connectString("localhost:2181")
                 .namespace("myrpc")
                 .retryPolicy(retryPolicy)
                 .build();
-
+        client.start();
     }
 
     @Override
@@ -31,12 +32,12 @@ public class ZkRegistryCenter implements RegistryCenter {
 
 
     public void register(String serviceName, String instanceName) {
+        System.out.println("---register service to zk : " + serviceName + ", instance: " + instanceName);
         String servicePath = "/" + serviceName;
         try {
             if (client.checkExists().forPath(servicePath) == null) {
                 client.create().withMode(CreateMode.PERSISTENT).forPath(servicePath, "service".getBytes());
             }
-
             String instancePath = servicePath + "/" + instanceName;
             client.create().withMode(CreateMode.EPHEMERAL).forPath(instancePath, "provider".getBytes());
         } catch (Exception e) {
@@ -46,6 +47,8 @@ public class ZkRegistryCenter implements RegistryCenter {
 
     @Override
     public void unregister(String serviceName, String instanceName) {
+        System.out.println("---unregister service to zk : " + serviceName + ", instance: " + instanceName);
+
         String servicePath = "/" + serviceName;
         try {
             if (client.checkExists().forPath(servicePath) == null) {

@@ -26,7 +26,7 @@ public class ConsumerConfig {
 
     @Bean
     @Order(Integer.MIN_VALUE)
-    public ApplicationRunner configRunner(@Autowired ConsumerBootstrap consumerBootstrap) {
+    public ApplicationRunner consumerConfigRunner(@Autowired ConsumerBootstrap consumerBootstrap) {
         return args -> {
             consumerBootstrap.startApplication();
         };
