@@ -30,7 +30,7 @@ public class ProviderBootstrap implements ApplicationContextAware {
     ApplicationContext applicationContext;
 
     private String instanceAddress;
-
+    RegistryCenter registryCenter;
     @Value("${server.port}")
     private String port;
 
@@ -49,6 +49,7 @@ public class ProviderBootstrap implements ApplicationContextAware {
         providers.values().forEach(provider -> {
             genInterfaces(provider);
         });
+        registryCenter = applicationContext.getBean(RegistryCenter.class);
 
     }
 
@@ -56,22 +57,23 @@ public class ProviderBootstrap implements ApplicationContextAware {
     // 不放在init中因为这时spring还没有加载完成，服务可能不可用
     // 在ProviderConfig中调用
     public void start() {
+        registryCenter.start();
         instanceAddress = InetAddress.getLocalHost().getHostAddress() + "_" + port;
         skeleton.keySet().forEach(this::registerProvider);
     }
 
     @PreDestroy
     public void stop() {
-        skeleton.keySet().forEach(this::unregisterProvider);
+        System.out.println("===> ProviderBootstrap stop");
+        skeleton.keySet().forEach(this::  unregisterProvider);
+        registryCenter.stop();
     }
 
     private void registerProvider(String serviceName) {
-        RegistryCenter registryCenter = applicationContext.getBean(RegistryCenter.class);
         registryCenter.register(serviceName, instanceAddress);
     }
 
     private void unregisterProvider(String serviceName) {
-        RegistryCenter registryCenter = applicationContext.getBean(RegistryCenter.class);
         registryCenter.unregister(serviceName, instanceAddress);
     }
 
@@ -149,7 +151,6 @@ public class ProviderBootstrap implements ApplicationContextAware {
             result[i] = TypeUtils.cast(params[i], parameterTypes[i]);
 //            System.out.println("-----param [i] = " + result[i]);
         }
-
         return result;
     }
 

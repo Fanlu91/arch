@@ -30,6 +30,7 @@ public class ZkRegistryCenter implements RegistryCenter {
 
     @Override
     public void stop() {
+        System.out.println("===> stop zk registry client");
         client.close();
     }
 
@@ -85,6 +86,7 @@ public class ZkRegistryCenter implements RegistryCenter {
     public void subscribe(String serviceName, ChangedListener listener) {
         System.out.println("---subscribe service from zk : " + serviceName);
         // 监听service path 下的子节点变化
+        // treeCache 是zk数据结构的一个本地缓存对象
         final TreeCache treeCache = TreeCache.newBuilder(client, "/" + serviceName)
                 .setCacheData(true).setMaxDepth(2).build();
         // client 是一个CuratorFramework实例，代表与ZooKeeper集群的连接。你可以使用这个客户端实例来执行更多的ZooKeeper操作，如查询节点数据。
