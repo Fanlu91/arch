@@ -2,8 +2,8 @@ package com.flhai.myrpc.demo.provider;
 
 import com.flhai.myrpc.core.api.RpcRequest;
 import com.flhai.myrpc.core.api.RpcResponse;
-import com.flhai.myrpc.core.provider.ProviderBootstrap;
 import com.flhai.myrpc.core.provider.ProviderConfig;
+import com.flhai.myrpc.core.provider.ProviderInvoker;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.SpringApplication;
@@ -24,13 +24,13 @@ public class MyrpcDemoProviderApplication {
     }
 
     @Autowired
-    ProviderBootstrap providerBootstrap;
+    ProviderInvoker providerInvoker;
 
     // use http + json to communicate
     @RequestMapping("/")
     public RpcResponse invoke(@RequestBody RpcRequest request) {
         // find the service
-        return providerBootstrap.invokeRequest(request);
+        return providerInvoker.invokeRequest(request);
     }
 
 
@@ -54,9 +54,10 @@ public class MyrpcDemoProviderApplication {
 //            response = invoke(request);
 //            System.out.println("return: " + response.getData());
 
+//            var request = new RpcRequest();
 //            request.setService("com.flhai.myrpc.demo.api.UserService");
 //            request.setMethodSign("findById@2_int_java.lang.String");
-//            request.setParams(new Object[]{100,"fhai"});
+//            request.setParams(new Object[]{100, "fhai"});
 //            RpcResponse response = invoke(request);
 //            System.out.println("return: " + response.toString());
         };

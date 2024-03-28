@@ -15,6 +15,11 @@ public class ProviderConfig {
         return new ProviderBootstrap();
     }
 
+    @Bean
+    ProviderInvoker providerInvoker(@Autowired ProviderBootstrap providerBootstrap) {
+        return new ProviderInvoker(providerBootstrap);
+    }
+
     @Bean()
     public RegistryCenter providerRegistryCenter() {
         return new ZkRegistryCenter();

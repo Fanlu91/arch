@@ -4,7 +4,7 @@ import com.flhai.myrpc.core.annotation.MyConsumer;
 import com.flhai.myrpc.core.api.RpcRequest;
 import com.flhai.myrpc.core.api.RpcResponse;
 import com.flhai.myrpc.core.consumer.ConsumerConfig;
-import com.flhai.myrpc.core.provider.ProviderBootstrap;
+import com.flhai.myrpc.core.provider.ProviderInvoker;
 import com.flhai.myrpc.demo.api.OrderService;
 import com.flhai.myrpc.demo.api.User;
 import com.flhai.myrpc.demo.api.UserService;
@@ -31,13 +31,13 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 class MyrpcDemoProviderApplicationTests {
 
     @Autowired
-    ProviderBootstrap providerBootstrap;
+    ProviderInvoker providerInvoker;
 
     // use http + json to communicate
     @RequestMapping("/")
     public RpcResponse invoke(@RequestBody RpcRequest request) {
         // find the service
-        return providerBootstrap.invokeRequest(request);
+        return providerInvoker.invokeRequest(request);
     }
 
     @MyConsumer
