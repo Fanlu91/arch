@@ -3,19 +3,19 @@ package com.flhai.myrpc.core.api;
 import java.util.List;
 
 public interface RegistryCenter {
-    void start();
+    void start(); // p/c
 
-    void stop();
+    void stop(); // p/c
 
     // provider
-    void register(String serviceName, String serviceAddress);
+    void register(String serviceName, String serviceAddress); // p
 
-    void unregister(String serviceName, String serviceAddress);
+    void unregister(String serviceName, String serviceAddress); // p
 
     // consumer
 
-    List<String> fetchAll(String serviceName);
-
+    List<String> fetchAll(String serviceName); // c
+//    void subscribe(String serviceName, NotifyListener listener); // c
     static class StaticRegistryCenter implements RegistryCenter {
 
         List<String> serviceList;

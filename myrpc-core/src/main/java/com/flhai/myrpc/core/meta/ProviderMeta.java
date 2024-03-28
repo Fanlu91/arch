@@ -1,4 +1,4 @@
-package meta;
+package com.flhai.myrpc.core.meta;
 
 import lombok.Data;
 

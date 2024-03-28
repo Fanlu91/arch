@@ -7,7 +7,7 @@ import com.flhai.myrpc.core.util.MethodUtils;
 import com.flhai.myrpc.core.util.TypeUtils;
 import jakarta.annotation.PostConstruct;
 import lombok.Data;
-import meta.ProviderMeta;
+import com.flhai.myrpc.core.meta.ProviderMeta;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
