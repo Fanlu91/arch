@@ -2,6 +2,7 @@ package com.flhai.myrpc.core.provider;
 
 import com.flhai.myrpc.core.annotation.MyProvider;
 import com.flhai.myrpc.core.api.RegistryCenter;
+import com.flhai.myrpc.core.meta.InstanceMeta;
 import com.flhai.myrpc.core.meta.ProviderMeta;
 import com.flhai.myrpc.core.util.MethodUtils;
 import jakarta.annotation.PostConstruct;
@@ -24,7 +25,7 @@ import java.util.Map;
 public class ProviderBootstrap implements ApplicationContextAware {
     ApplicationContext applicationContext;
 
-    private String instanceAddress;
+    private InstanceMeta instance;
     RegistryCenter registryCenter;
     @Value("${server.port}")
     private String port;
@@ -36,8 +37,6 @@ public class ProviderBootstrap implements ApplicationContextAware {
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
         this.applicationContext = applicationContext;
     }
-
-
 
 
     @PostConstruct // 相当于 init method
@@ -55,23 +54,24 @@ public class ProviderBootstrap implements ApplicationContextAware {
     // 在ProviderConfig中调用
     public void start() {
         registryCenter.start();
-        instanceAddress = InetAddress.getLocalHost().getHostAddress() + "_" + port;
+        instance = new InstanceMeta(InetAddress.getLocalHost().getHostAddress(), Integer.parseInt(port));
+//        instance = InetAddress.getLocalHost().getHostAddress() + "_" + port;
         skeleton.keySet().forEach(this::registerProvider);
     }
 
     @PreDestroy
     public void stop() {
         System.out.println("===> ProviderBootstrap stop");
-        skeleton.keySet().forEach(this::  unregisterProvider);
+        skeleton.keySet().forEach(this::unregisterProvider);
         registryCenter.stop();
     }
 
     private void registerProvider(String serviceName) {
-        registryCenter.register(serviceName, instanceAddress);
+        registryCenter.register(serviceName, instance);
     }
 
     private void unregisterProvider(String serviceName) {
-        registryCenter.unregister(serviceName, instanceAddress);
+        registryCenter.unregister(serviceName, instance);
     }
 
     private void genInterfaces(Object provider) {
@@ -95,7 +95,6 @@ public class ProviderBootstrap implements ApplicationContextAware {
         System.out.println("Created provider, providerMeta = " + providerMeta);
         skeleton.add(providerInterface.getCanonicalName(), providerMeta);
     }
-
 
 
 }

@@ -5,11 +5,11 @@ import com.flhai.myrpc.core.api.LoadBalancer;
 import java.util.List;
 import java.util.Random;
 
-public class RandomLoadBalancer<T> implements LoadBalancer<T> {
+public class RandomLoadBalancer<InstanceMeta> implements LoadBalancer<com.flhai.myrpc.core.meta.InstanceMeta> {
 
     Random random = new Random();
 
-    public T choose(List<T> providers) {
+    public com.flhai.myrpc.core.meta.InstanceMeta choose(List<com.flhai.myrpc.core.meta.InstanceMeta> providers) {
         if (providers == null || providers.size() == 0) {
             return null;
         }

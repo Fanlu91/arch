@@ -1,6 +1,7 @@
 package com.flhai.myrpc.core.registry;
 
 import com.flhai.myrpc.core.api.RegistryCenter;
+import com.flhai.myrpc.core.meta.InstanceMeta;
 import lombok.SneakyThrows;
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;
@@ -8,6 +9,7 @@ import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.framework.recipes.cache.TreeCache;
 import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.apache.zookeeper.CreateMode;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -37,14 +39,15 @@ public class ZkRegistryCenter implements RegistryCenter {
     }
 
 
-    public void register(String serviceName, String instanceName) {
-        System.out.println("---register service to zk : " + serviceName + ", instance: " + instanceName);
+    public void register(String serviceName, InstanceMeta instance) {
+        System.out.println("---register service to zk : " + serviceName + ", instance: " + instance);
         String servicePath = "/" + serviceName;
         try {
             if (client.checkExists().forPath(servicePath) == null) {
                 client.create().withMode(CreateMode.PERSISTENT).forPath(servicePath, "service".getBytes());
             }
-            String instancePath = servicePath + "/" + instanceName;
+            String instancePath = servicePath + "/" + instance;
+            System.out.println("===>register instance to zk : " + instancePath);
             client.create().withMode(CreateMode.EPHEMERAL).forPath(instancePath, "provider".getBytes());
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -52,8 +55,8 @@ public class ZkRegistryCenter implements RegistryCenter {
     }
 
     @Override
-    public void unregister(String serviceName, String instanceName) {
-        System.out.println("---unregister service to zk : " + serviceName + ", instance: " + instanceName);
+    public void unregister(String serviceName, InstanceMeta instance) {
+        System.out.println("---unregister service to zk : " + serviceName + ", instance: " + instance);
 
         String servicePath = "/" + serviceName;
         try {
@@ -61,7 +64,7 @@ public class ZkRegistryCenter implements RegistryCenter {
                 return;
             }
 
-            String instancePath = servicePath + "/" + instanceName;
+            String instancePath = servicePath + "/" + instance;
             client.delete().quietly().forPath(instancePath);
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -69,18 +72,27 @@ public class ZkRegistryCenter implements RegistryCenter {
     }
 
     @Override
-    public List<String> fetchAll(String serviceName) {
+    public List<InstanceMeta> fetchAll(String serviceName) {
         System.out.println("---fetch all service from zk : " + serviceName);
         String servicePath = "/" + serviceName;
         try {
             List<String> nodes = client.getChildren().forPath(servicePath);
-            List<String> urls = nodes.stream()
-                    .map(node -> "http://" + node.replace("_", ":"))
-                    .collect(Collectors.toList());
-            return urls;
+            // node = "InstanceMeta(schema=http, host=127.0.0.1, port=8080, context=null, isOnline=false, params=null)"
+            List<InstanceMeta> instanceMetaList = mapInstanceMeta(nodes);
+            return instanceMetaList;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @NotNull
+    private static List<InstanceMeta> mapInstanceMeta(List<String> nodes) {
+        return nodes.stream().map(node -> {
+            String[] parts = node.split(",");
+            String host = parts[1].split("=")[1];
+            int port = Integer.parseInt(parts[2].split("=")[1]);
+            return new InstanceMeta(host, port);
+        }).collect(Collectors.toList());
     }
 
     @Override
@@ -96,7 +108,7 @@ public class ZkRegistryCenter implements RegistryCenter {
         // TreeCacheEvent让监听器能够根据事件的具体情况执行相应的逻辑。
         treeCache.getListenable().addListener((client, event) -> {
             System.out.println("---zk service changed: " + event);
-            List<String> nodes = fetchAll(serviceName);
+            List<InstanceMeta> nodes = fetchAll(serviceName);
             listener.fireChange(new Event(nodes));
         });
         treeCache.start();

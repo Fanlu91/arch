@@ -4,6 +4,7 @@ import com.flhai.myrpc.core.api.RpcContext;
 import com.flhai.myrpc.core.api.RpcRequest;
 import com.flhai.myrpc.core.api.RpcResponse;
 import com.flhai.myrpc.core.consumer.http.OkHttpInvoker;
+import com.flhai.myrpc.core.meta.InstanceMeta;
 import com.flhai.myrpc.core.util.MethodUtils;
 
 import java.lang.reflect.InvocationHandler;
@@ -16,11 +17,11 @@ public class MyInvocationHandler implements InvocationHandler {
 
     Class<?> serviceClass;
     RpcContext rpcContext;
-    List<String> providers;
+    List<InstanceMeta> providers;
 
     HttpInvoker httpInvoker = new OkHttpInvoker();
 
-    public MyInvocationHandler(Class<?> serviceClass, RpcContext rpcContext, List<String> providers) {
+    public MyInvocationHandler(Class<?> serviceClass, RpcContext rpcContext, List<InstanceMeta> providers) {
         this.serviceClass = serviceClass;
         this.rpcContext = rpcContext;
         this.providers = providers;
@@ -35,9 +36,10 @@ public class MyInvocationHandler implements InvocationHandler {
         rpcRequest.setMethodSign(MethodUtils.methodSign(method));
         rpcRequest.setParams(args);
 
-        List<String> route = rpcContext.getRouter().route(providers);
-        String url = (String) rpcContext.getLoadBalancer().choose(route);
-        System.out.println("loadBalancer.choose url = " + url);
+        List<InstanceMeta> route = rpcContext.getRouter().route(providers);
+        InstanceMeta instance = rpcContext.getLoadBalancer().choose(route);
+        String url = instance.toPath();
+        System.out.println("===> loadBalancer.choose url = " + url);
         RpcResponse rpcResponse = httpInvoker.post(rpcRequest, url);
         if (rpcResponse.isStatus()) {
             Object data = rpcResponse.getData();

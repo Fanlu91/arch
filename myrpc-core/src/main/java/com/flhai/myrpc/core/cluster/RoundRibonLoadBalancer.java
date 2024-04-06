@@ -5,11 +5,11 @@ import com.flhai.myrpc.core.api.LoadBalancer;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class RoundRibonLoadBalancer<T> implements LoadBalancer<T> {
+public class RoundRibonLoadBalancer<InstanceMeta> implements LoadBalancer<InstanceMeta> {
     private AtomicInteger atomicInteger = new AtomicInteger(0);
 
 
-    public T choose(List<T> providers) {
+    public InstanceMeta choose(List<InstanceMeta> providers) {
         if (providers == null || providers.size() == 0) {
             return null;
         }

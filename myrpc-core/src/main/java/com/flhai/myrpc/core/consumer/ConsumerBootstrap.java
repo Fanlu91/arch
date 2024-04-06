@@ -5,6 +5,7 @@ import com.flhai.myrpc.core.api.LoadBalancer;
 import com.flhai.myrpc.core.api.RegistryCenter;
 import com.flhai.myrpc.core.api.Router;
 import com.flhai.myrpc.core.api.RpcContext;
+import com.flhai.myrpc.core.meta.InstanceMeta;
 import com.flhai.myrpc.core.registry.ChangedListener;
 import com.flhai.myrpc.core.registry.Event;
 import lombok.AllArgsConstructor;
@@ -82,7 +83,7 @@ public class ConsumerBootstrap implements ApplicationContextAware, EnvironmentAw
                     } catch (IllegalAccessException e) {
                         throw new RuntimeException(e);
                     }
-//                    stub.put(serviceName,consumer);
+                    stub.put(serviceName, consumer);
                 });
             }
         }
@@ -92,15 +93,14 @@ public class ConsumerBootstrap implements ApplicationContextAware, EnvironmentAw
     private Object createConsumerFromRegistry(Class<?> serviceClass, RpcContext rpcContext, RegistryCenter registryCenter) {
         System.out.println("------------createConsumerFromRegistry called");
         String serviceName = serviceClass.getCanonicalName();
-        List<String> providers = registryCenter.fetchAll(serviceName);
+        List<InstanceMeta> providers = registryCenter.fetchAll(serviceName);
         providers.forEach(System.out::println);
-
 
         registryCenter.subscribe(serviceName, new ChangedListener() {
             @Override
             public void fireChange(Event event) {
                 providers.clear();
-                providers.addAll(event.getData());
+                providers.addAll(event.getInstance());
             }
         });
         //上面代码的 lambda 简化写法如下，我觉得可读性有所降低
@@ -111,10 +111,10 @@ public class ConsumerBootstrap implements ApplicationContextAware, EnvironmentAw
         return createConsumer(serviceClass, rpcContext, providers);
     }
 
-    private Object createConsumer(Class<?> serviceClass, RpcContext context, List<String> providers) {
+    private Object createConsumer(Class<?> serviceClass, RpcContext context, List<InstanceMeta> instance) {
         return Proxy.newProxyInstance(serviceClass.getClassLoader(),
                 new Class[]{serviceClass},
-                new MyInvocationHandler(serviceClass, context, providers));
+                new MyInvocationHandler(serviceClass, context, instance));
     }
 
 

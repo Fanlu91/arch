@@ -1,4 +1,4 @@
 server:
-    port: 8088
+    port: 9088
 myrpc:
     providers: http://localhost:8080,http://localhost:8081,http://localhost:8082
