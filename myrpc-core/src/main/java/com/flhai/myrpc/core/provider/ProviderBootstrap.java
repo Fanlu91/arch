@@ -4,6 +4,7 @@ import com.flhai.myrpc.core.annotation.MyProvider;
 import com.flhai.myrpc.core.api.RegistryCenter;
 import com.flhai.myrpc.core.meta.InstanceMeta;
 import com.flhai.myrpc.core.meta.ProviderMeta;
+import com.flhai.myrpc.core.meta.ServiceMeta;
 import com.flhai.myrpc.core.util.MethodUtils;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
@@ -29,8 +30,17 @@ public class ProviderBootstrap implements ApplicationContextAware {
     RegistryCenter registryCenter;
     @Value("${server.port}")
     private String port;
-
     private MultiValueMap<String, ProviderMeta> skeleton = new LinkedMultiValueMap<>();
+
+    @Value("${app.id}")
+    private String app;
+
+    @Value("${app.namespace}")
+    private String namespace;
+
+    @Value("${app.env}")
+    private String env;
+
 
     // 据说可以省略
     @Override
@@ -42,9 +52,7 @@ public class ProviderBootstrap implements ApplicationContextAware {
     @PostConstruct // 相当于 init method
     public void init() {
         Map<String, Object> providers = applicationContext.getBeansWithAnnotation(MyProvider.class);
-        providers.values().forEach(provider -> {
-            genInterfaces(provider);
-        });
+        providers.values().forEach(this::genInterfaces);
         registryCenter = applicationContext.getBean(RegistryCenter.class);
 
     }
@@ -67,11 +75,19 @@ public class ProviderBootstrap implements ApplicationContextAware {
     }
 
     private void registerProvider(String serviceName) {
-        registryCenter.register(serviceName, instance);
+        ServiceMeta serviceMeta = ServiceMeta
+                .builder()
+                .app(app)
+                .namespace(namespace)
+                .env(env)
+                .name(serviceName).build();
+        registryCenter.register(serviceMeta, instance);
     }
 
     private void unregisterProvider(String serviceName) {
-        registryCenter.unregister(serviceName, instance);
+        ServiceMeta serviceMeta = ServiceMeta.builder()
+                .app(app).namespace(namespace).env(env).name(serviceName).build();
+        registryCenter.unregister(serviceMeta, instance);
     }
 
     private void genInterfaces(Object provider) {

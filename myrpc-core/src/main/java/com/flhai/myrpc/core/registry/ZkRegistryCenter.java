@@ -2,6 +2,7 @@ package com.flhai.myrpc.core.registry;
 
 import com.flhai.myrpc.core.api.RegistryCenter;
 import com.flhai.myrpc.core.meta.InstanceMeta;
+import com.flhai.myrpc.core.meta.ServiceMeta;
 import lombok.SneakyThrows;
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;
@@ -39,9 +40,8 @@ public class ZkRegistryCenter implements RegistryCenter {
     }
 
 
-    public void register(String serviceName, InstanceMeta instance) {
-        System.out.println("---register service to zk : " + serviceName + ", instance: " + instance);
-        String servicePath = "/" + serviceName;
+    public void register(ServiceMeta serviceMeta, InstanceMeta instance) {
+        String servicePath = "/" + serviceMeta.toPath();
         try {
             if (client.checkExists().forPath(servicePath) == null) {
                 client.create().withMode(CreateMode.PERSISTENT).forPath(servicePath, "service".getBytes());
@@ -55,10 +55,10 @@ public class ZkRegistryCenter implements RegistryCenter {
     }
 
     @Override
-    public void unregister(String serviceName, InstanceMeta instance) {
-        System.out.println("---unregister service to zk : " + serviceName + ", instance: " + instance);
+    public void unregister(ServiceMeta serviceMeta, InstanceMeta instance) {
+        System.out.println("---unregister service to zk : " + serviceMeta + ", instance: " + instance);
 
-        String servicePath = "/" + serviceName;
+        String servicePath = "/" + serviceMeta.toPath();
         try {
             if (client.checkExists().forPath(servicePath) == null) {
                 return;
@@ -72,9 +72,9 @@ public class ZkRegistryCenter implements RegistryCenter {
     }
 
     @Override
-    public List<InstanceMeta> fetchAll(String serviceName) {
-        System.out.println("---fetch all service from zk : " + serviceName);
-        String servicePath = "/" + serviceName;
+    public List<InstanceMeta> fetchAll(ServiceMeta serviceMeta) {
+        System.out.println("---fetch all service from zk : " + serviceMeta.toPath());
+        String servicePath = "/" + serviceMeta.toPath();
         try {
             List<String> nodes = client.getChildren().forPath(servicePath);
             // node = "InstanceMeta(schema=http, host=127.0.0.1, port=8080, context=null, isOnline=false, params=null)"
@@ -97,18 +97,18 @@ public class ZkRegistryCenter implements RegistryCenter {
 
     @Override
     @SneakyThrows
-    public void subscribe(String serviceName, ChangedListener listener) {
-        System.out.println("---subscribe service from zk : " + serviceName);
+    public void subscribe(ServiceMeta serviceMeta, ChangedListener listener) {
+        System.out.println("---subscribe service from zk : " + serviceMeta.toPath());
         // 监听service path 下的子节点变化
         // treeCache 是zk数据结构的一个本地缓存对象
-        treeCache = TreeCache.newBuilder(client, "/" + serviceName)
+        treeCache = TreeCache.newBuilder(client, "/" + serviceMeta.toPath())
                 .setCacheData(true).setMaxDepth(2).build();
         // client 是一个CuratorFramework实例，代表与ZooKeeper集群的连接。你可以使用这个客户端实例来执行更多的ZooKeeper操作，如查询节点数据。
         // event 是一个TreeCacheEvent实例，包含了事件的类型（如节点创建、节点删除、节点数据变化等）和与事件相关的数据（如变化的节点的路径和数据）。
         // TreeCacheEvent让监听器能够根据事件的具体情况执行相应的逻辑。
         treeCache.getListenable().addListener((client, event) -> {
             System.out.println("---zk service changed: " + event);
-            List<InstanceMeta> nodes = fetchAll(serviceName);
+            List<InstanceMeta> nodes = fetchAll(serviceMeta);
             listener.fireChange(new Event(nodes));
         });
         treeCache.start();

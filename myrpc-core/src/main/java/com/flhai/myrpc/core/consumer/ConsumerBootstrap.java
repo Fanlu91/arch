@@ -6,12 +6,14 @@ import com.flhai.myrpc.core.api.RegistryCenter;
 import com.flhai.myrpc.core.api.Router;
 import com.flhai.myrpc.core.api.RpcContext;
 import com.flhai.myrpc.core.meta.InstanceMeta;
+import com.flhai.myrpc.core.meta.ServiceMeta;
 import com.flhai.myrpc.core.registry.ChangedListener;
 import com.flhai.myrpc.core.registry.Event;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.EnvironmentAware;
@@ -33,6 +35,17 @@ public class ConsumerBootstrap implements ApplicationContextAware, EnvironmentAw
     ApplicationContext applicationContext;
     Environment environment;
 
+    @Value("${app.id}")
+    private String app;
+
+    @Value("${app.namespace}")
+    private String namespace;
+
+    @Value("${app.env}")
+    private String env;
+
+    private Map<String, Object> stub = new HashMap<>();
+
     @Override
     public void setEnvironment(Environment environment) {
         this.environment = environment;
@@ -43,10 +56,8 @@ public class ConsumerBootstrap implements ApplicationContextAware, EnvironmentAw
         this.applicationContext = applicationContext;
     }
 
-    private Map<String, Object> stub = new HashMap<>();
-
     public void startApplication() {
-        System.out.println("------------startApplication called");
+        System.out.println("===>startApplication called");
 
         RpcContext rpcContext = new RpcContext();
         rpcContext.setRouter(applicationContext.getBean(Router.class));
@@ -89,14 +100,24 @@ public class ConsumerBootstrap implements ApplicationContextAware, EnvironmentAw
         }
     }
 
-
     private Object createConsumerFromRegistry(Class<?> serviceClass, RpcContext rpcContext, RegistryCenter registryCenter) {
-        System.out.println("------------createConsumerFromRegistry called");
+        System.out.println("===> createConsumerFromRegistry called");
         String serviceName = serviceClass.getCanonicalName();
-        List<InstanceMeta> providers = registryCenter.fetchAll(serviceName);
+        ServiceMeta serviceMeta = ServiceMeta.builder()
+                .app(app)
+                .namespace(namespace)
+                .env(env)
+                .name(serviceName)
+                .build();
+        List<InstanceMeta> providers = registryCenter.fetchAll(serviceMeta);
+        System.out.println("===> providers fetched from registry:");
         providers.forEach(System.out::println);
 
-        registryCenter.subscribe(serviceName, new ChangedListener() {
+        if (providers.isEmpty()) {
+            throw new RuntimeException("no provider found for service: " + serviceName);
+        }
+
+        registryCenter.subscribe(serviceMeta, new ChangedListener() {
             @Override
             public void fireChange(Event event) {
                 providers.clear();

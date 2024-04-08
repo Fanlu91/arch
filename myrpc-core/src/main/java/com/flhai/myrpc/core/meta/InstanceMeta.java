@@ -5,6 +5,9 @@ import lombok.Data;
 
 import java.util.Map;
 
+/**
+ * 描述服务实例元数据
+ */
 @Data
 @AllArgsConstructor
 public class InstanceMeta {
@@ -30,7 +33,7 @@ public class InstanceMeta {
         this.schema = "http";
     }
 
-    public String toPath() {
+    public String toUrl() {
         return String.format("%s://%s:%d", schema, host, port);
     }
 }

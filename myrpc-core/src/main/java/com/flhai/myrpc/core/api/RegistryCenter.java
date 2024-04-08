@@ -2,6 +2,7 @@ package com.flhai.myrpc.core.api;
 
 
 import com.flhai.myrpc.core.meta.InstanceMeta;
+import com.flhai.myrpc.core.meta.ServiceMeta;
 import com.flhai.myrpc.core.registry.ChangedListener;
 
 import java.util.List;
@@ -12,15 +13,15 @@ public interface RegistryCenter {
     void stop(); // p/c
 
     // provider
-    void register(String serviceName, InstanceMeta instance); // p
+    void register(ServiceMeta serviceName, InstanceMeta instance); // p
 
-    void unregister(String serviceName, InstanceMeta instance); // p
+    void unregister(ServiceMeta serviceName, InstanceMeta instance); // p
 
     // consumer
 
-    List<InstanceMeta> fetchAll(String serviceName); // c
+    List<InstanceMeta> fetchAll(ServiceMeta serviceName); // c
 
-    void subscribe(String serviceName, ChangedListener listener); // c
+    void subscribe(ServiceMeta serviceName, ChangedListener listener); // c
 
     static class StaticRegistryCenter implements RegistryCenter {
 
@@ -39,20 +40,20 @@ public interface RegistryCenter {
         }
 
         @Override
-        public void register(String serviceName, InstanceMeta instance) {
+        public void register(ServiceMeta serviceName, InstanceMeta instance) {
         }
 
         @Override
-        public void unregister(String serviceName, InstanceMeta instance) {
+        public void unregister(ServiceMeta serviceName, InstanceMeta instance) {
         }
 
         @Override
-        public List<InstanceMeta> fetchAll(String serviceName) {
+        public List<InstanceMeta> fetchAll(ServiceMeta serviceName) {
             return serviceList;
         }
 
         @Override
-        public void subscribe(String serviceName, ChangedListener listener) {
+        public void subscribe(ServiceMeta serviceName, ChangedListener listener) {
 
         }
     }

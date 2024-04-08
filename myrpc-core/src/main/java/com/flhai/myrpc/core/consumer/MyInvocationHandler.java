@@ -38,7 +38,7 @@ public class MyInvocationHandler implements InvocationHandler {
 
         List<InstanceMeta> route = rpcContext.getRouter().route(providers);
         InstanceMeta instance = rpcContext.getLoadBalancer().choose(route);
-        String url = instance.toPath();
+        String url = instance.toUrl();
         System.out.println("===> loadBalancer.choose url = " + url);
         RpcResponse rpcResponse = httpInvoker.post(rpcRequest, url);
         if (rpcResponse.isStatus()) {
