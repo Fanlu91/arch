@@ -4,7 +4,7 @@ import com.flhai.myrpc.core.api.LoadBalancer;
 import com.flhai.myrpc.core.api.RegistryCenter;
 import com.flhai.myrpc.core.api.Router;
 import com.flhai.myrpc.core.cluster.RoundRibonLoadBalancer;
-import com.flhai.myrpc.core.registry.ZkRegistryCenter;
+import com.flhai.myrpc.core.registry.zk.ZkRegistryCenter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationRunner;

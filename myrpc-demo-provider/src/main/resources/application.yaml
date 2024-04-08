@@ -4,3 +4,6 @@ app:
   id: app1
   namespace: public
   env: dev
+myrpc:
+  zkServers: localhost:2181
+  zkNamespace: myrpc

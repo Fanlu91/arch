@@ -1,8 +1,10 @@
-package com.flhai.myrpc.core.registry;
+package com.flhai.myrpc.core.registry.zk;
 
 import com.flhai.myrpc.core.api.RegistryCenter;
 import com.flhai.myrpc.core.meta.InstanceMeta;
 import com.flhai.myrpc.core.meta.ServiceMeta;
+import com.flhai.myrpc.core.registry.ChangedListener;
+import com.flhai.myrpc.core.registry.Event;
 import lombok.SneakyThrows;
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;
@@ -11,6 +13,7 @@ import org.apache.curator.framework.recipes.cache.TreeCache;
 import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.apache.zookeeper.CreateMode;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -20,15 +23,22 @@ public class ZkRegistryCenter implements RegistryCenter {
     private CuratorFramework client = null;
     private TreeCache treeCache = null;
 
+    @Value("${myrpc.zkServers}")
+    private String zkServers;
+
+    @Value("${myrpc.zkNamespace}")
+    private String zkNamespace;
+
     @Override
     public void start() {
         System.out.println("---start zk registry client");
         RetryPolicy retryPolicy = new ExponentialBackoffRetry(1000, 3);
         client = CuratorFrameworkFactory.builder()
-                .connectString("localhost:2181")
-                .namespace("myrpc")
+                .connectString(zkServers)
+                .namespace(zkNamespace)
                 .retryPolicy(retryPolicy)
                 .build();
+        System.out.println("===> start zk registry client" + zkServers + " " + zkNamespace);
         client.start();
     }
 
