@@ -15,7 +15,6 @@ Execution, Deployment -> Compiler -> Annotation Processors 中找到这个选项
 新创建module时，idea会自动在pom中创建一个spring-boot-maven-plugin，类似下面这样
 
 ```xml
-
 <plugin>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-maven-plugin</artifactId>
@@ -36,7 +35,6 @@ Spring Boot应用被打包成一个可执行jar（uber jar或fat jar）后，如
 可以通过在pom中添加以下配置在不希望打出可执行jar的时候禁用spring-boot-maven-plugin。当然也可以直接删除这个plugin。
 
 ```xml
-
 <plugin>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-maven-plugin</artifactId>
@@ -91,7 +89,7 @@ public class StartupBean {
     @PostConstruct
     public void init() {
         // 执行初始化逻辑，比如加载配置文件
-        System.out.println("系统启动，执行初始化任务...");
+        log.info("系统启动，执行初始化任务...");
     }
 }
 ```
@@ -158,8 +156,48 @@ loadbalance 可以实现router的功能，但是不符合单一职责原则。
 
 router 是根据一定规则（非负载角度的），进行服务的路由，比如根据tag等。
 
-
 ## 不同负载均衡算法
 
 在规模和并发不大的情况下，性能角度 RR 和复杂算法没有区别。
 只有在规模和并发大的情况下，复杂算法才能体现出优势。
+
+
+
+
+
+# 工具
+
+## wrk
+
+```less
+wrk "http://localhost:9088/?id=101"
+Running 10s test @ http://localhost:9088/\?id\=101
+  2 threads and 10 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency   136.80ms  402.64ms   1.99s    90.00%
+    Req/Sec     5.36k     2.25k    7.39k    83.33%
+  16352 requests in 10.01s, 9.20MB read
+  Non-2xx or 3xx responses: 16352
+Requests/sec:   1633.78
+Transfer/sec:      0.92MB
+
+
+wrk "http://localhost:9088/?id=101" -d3s
+
+```
+
+## arthas
+
+[命令列表 | arthas](https://arthas.aliyun.com/doc/commands.html)
+
+
+
+```less
+➜  arthas-bin java -jar arthas-boot.jar
+
+dashboard
+
+sc com.flhai.myrpc.*
+trace com.flhai.myrpc.core.consumer.MyInvocationHandler invoke
+
+```

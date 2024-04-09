@@ -4,11 +4,13 @@ import com.alibaba.fastjson.JSON;
 import com.flhai.myrpc.core.api.RpcRequest;
 import com.flhai.myrpc.core.api.RpcResponse;
 import com.flhai.myrpc.core.consumer.HttpInvoker;
+import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
 
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
+@Slf4j
 public class OkHttpInvoker implements HttpInvoker {
     final MediaType JSONTYPE = MediaType.parse("application/json; charset=utf-8");
 
@@ -25,14 +27,14 @@ public class OkHttpInvoker implements HttpInvoker {
     @Override
     public RpcResponse<?> post(RpcRequest rpcRequest, String url) {
         String reqJson = JSON.toJSONString(rpcRequest);
-        System.out.println("reqJson = " + reqJson);
+        log.debug("reqJson = " + reqJson);
         Request request = new Request.Builder()
                 .url(url)
                 .post(RequestBody.create(reqJson, JSONTYPE))
                 .build();
         try {
             String responseJson = okHttpClient.newCall(request).execute().body().string();
-            System.out.println("responseJson = " + responseJson);
+            log.debug("responseJson = " + responseJson);
             return JSON.parseObject(responseJson, RpcResponse.class);
         } catch (ClassCastException e) {
             return new RpcResponse(false, null, e);

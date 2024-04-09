@@ -12,6 +12,7 @@ import com.flhai.myrpc.core.registry.Event;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
@@ -30,6 +31,7 @@ import static com.flhai.myrpc.core.util.MethodUtils.findAnnotatedField;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Slf4j
 public class ConsumerBootstrap implements ApplicationContextAware, EnvironmentAware {
 
     ApplicationContext applicationContext;
@@ -57,7 +59,7 @@ public class ConsumerBootstrap implements ApplicationContextAware, EnvironmentAw
     }
 
     public void startApplication() {
-        System.out.println("===>startApplication called");
+        log.info("===>startApplication called");
 
         RpcContext rpcContext = new RpcContext();
         rpcContext.setRouter(applicationContext.getBean(Router.class));
@@ -78,7 +80,7 @@ public class ConsumerBootstrap implements ApplicationContextAware, EnvironmentAw
             Object bean = applicationContext.getBean(beanName);
             List<Field> annotatedFields = findAnnotatedField(bean.getClass(), MyConsumer.class);
             if (annotatedFields.size() > 0) {
-                System.out.println("------------" + beanName + " has annotated fields");
+                log.info("------------" + beanName + " has annotated fields");
                 annotatedFields.stream().forEach(field -> {
                     Class<?> serviceClass = field.getType();
                     String serviceName = serviceClass.getCanonicalName();
@@ -101,7 +103,7 @@ public class ConsumerBootstrap implements ApplicationContextAware, EnvironmentAw
     }
 
     private Object createConsumerFromRegistry(Class<?> serviceClass, RpcContext rpcContext, RegistryCenter registryCenter) {
-        System.out.println("===> createConsumerFromRegistry called");
+        log.info("===> createConsumerFromRegistry called");
         String serviceName = serviceClass.getCanonicalName();
         ServiceMeta serviceMeta = ServiceMeta.builder()
                 .app(app)
@@ -110,7 +112,7 @@ public class ConsumerBootstrap implements ApplicationContextAware, EnvironmentAw
                 .name(serviceName)
                 .build();
         List<InstanceMeta> providers = registryCenter.fetchAll(serviceMeta);
-        System.out.println("===> providers fetched from registry:");
+        log.info("===> providers fetched from registry:");
         providers.forEach(System.out::println);
 
         if (providers.isEmpty()) {

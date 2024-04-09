@@ -37,9 +37,9 @@ public class ProviderInvoker {
             ProviderMeta providerMeta = getProviderMeta(request, methodSign, providerMetas);
             Method method = providerMeta.getMethod();
             Object[] params = processParams(request.getParams(), method.getParameterTypes());
-//            System.out.println("params length = " + params.length);
-//            System.out.println(params[0].getClass().getName());
-//            System.out.println(providerMeta.getSignName());
+//            log.debug("params length = " + params.length);
+//            log.debug(params[0].getClass().getName());
+//            log.debug(providerMeta.getSignName());
             Object result = method.invoke(providerMeta.getServiceImpl(), params);
             rpcResponse.setStatus(true);
             rpcResponse.setData(result);
@@ -73,7 +73,7 @@ public class ProviderInvoker {
         Object[] result = new Object[params.length];
         for (int i = 0; i < params.length; i++) {
             result[i] = TypeUtils.cast(params[i], parameterTypes[i]);
-//            System.out.println("-----param [i] = " + result[i]);
+//            log.debug("-----param [i] = " + result[i]);
         }
         return result;
     }

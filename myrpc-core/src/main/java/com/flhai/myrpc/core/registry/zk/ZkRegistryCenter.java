@@ -6,6 +6,7 @@ import com.flhai.myrpc.core.meta.ServiceMeta;
 import com.flhai.myrpc.core.registry.ChangedListener;
 import com.flhai.myrpc.core.registry.Event;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
@@ -18,6 +19,7 @@ import org.springframework.beans.factory.annotation.Value;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class ZkRegistryCenter implements RegistryCenter {
 
     private CuratorFramework client = null;
@@ -31,20 +33,20 @@ public class ZkRegistryCenter implements RegistryCenter {
 
     @Override
     public void start() {
-        System.out.println("---start zk registry client");
+        log.info("---start zk registry client");
         RetryPolicy retryPolicy = new ExponentialBackoffRetry(1000, 3);
         client = CuratorFrameworkFactory.builder()
                 .connectString(zkServers)
                 .namespace(zkNamespace)
                 .retryPolicy(retryPolicy)
                 .build();
-        System.out.println("===> start zk registry client" + zkServers + " " + zkNamespace);
+        log.info("===> start zk registry client" + zkServers + " " + zkNamespace);
         client.start();
     }
 
     @Override
     public void stop() {
-        System.out.println("===> stop zk registry client");
+        log.info("===> stop zk registry client");
         treeCache.close();
         client.close();
     }
@@ -57,7 +59,7 @@ public class ZkRegistryCenter implements RegistryCenter {
                 client.create().withMode(CreateMode.PERSISTENT).forPath(servicePath, "service".getBytes());
             }
             String instancePath = servicePath + "/" + instance;
-            System.out.println("===>register instance to zk : " + instancePath);
+            log.info("===>register instance to zk : " + instancePath);
             client.create().withMode(CreateMode.EPHEMERAL).forPath(instancePath, "provider".getBytes());
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -66,7 +68,7 @@ public class ZkRegistryCenter implements RegistryCenter {
 
     @Override
     public void unregister(ServiceMeta serviceMeta, InstanceMeta instance) {
-        System.out.println("---unregister service to zk : " + serviceMeta + ", instance: " + instance);
+        log.info("---unregister service to zk : " + serviceMeta + ", instance: " + instance);
 
         String servicePath = "/" + serviceMeta.toPath();
         try {
@@ -83,7 +85,7 @@ public class ZkRegistryCenter implements RegistryCenter {
 
     @Override
     public List<InstanceMeta> fetchAll(ServiceMeta serviceMeta) {
-        System.out.println("---fetch all service from zk : " + serviceMeta.toPath());
+        log.info("---fetch all service from zk : " + serviceMeta.toPath());
         String servicePath = "/" + serviceMeta.toPath();
         try {
             List<String> nodes = client.getChildren().forPath(servicePath);
@@ -108,7 +110,7 @@ public class ZkRegistryCenter implements RegistryCenter {
     @Override
     @SneakyThrows
     public void subscribe(ServiceMeta serviceMeta, ChangedListener listener) {
-        System.out.println("---subscribe service from zk : " + serviceMeta.toPath());
+        log.info("---subscribe service from zk : " + serviceMeta.toPath());
         // 监听service path 下的子节点变化
         // treeCache 是zk数据结构的一个本地缓存对象
         treeCache = TreeCache.newBuilder(client, "/" + serviceMeta.toPath())
@@ -117,7 +119,7 @@ public class ZkRegistryCenter implements RegistryCenter {
         // event 是一个TreeCacheEvent实例，包含了事件的类型（如节点创建、节点删除、节点数据变化等）和与事件相关的数据（如变化的节点的路径和数据）。
         // TreeCacheEvent让监听器能够根据事件的具体情况执行相应的逻辑。
         treeCache.getListenable().addListener((client, event) -> {
-            System.out.println("---zk service changed: " + event);
+            log.info("---zk service changed: " + event);
             List<InstanceMeta> nodes = fetchAll(serviceMeta);
             listener.fireChange(new Event(nodes));
         });

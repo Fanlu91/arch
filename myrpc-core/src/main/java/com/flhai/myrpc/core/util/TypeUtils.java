@@ -2,26 +2,28 @@ package com.flhai.myrpc.core.util;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.List;
 
+@Slf4j
 public class TypeUtils {
 
     public static Object castMethodReturnType(Method method, Object data) {
-//        System.out.println("data = " + data);
-//        System.out.println("method.getReturnType() = " + method.getReturnType());
-//        System.out.println("method.getGenericReturnType = " + method.getGenericReturnType());
+//        log.debug("data = " + data);
+//        log.debug("method.getReturnType() = " + method.getReturnType());
+//        log.debug("method.getGenericReturnType = " + method.getGenericReturnType());
         if (data instanceof JSONObject jsonResult) {
-            System.out.println("jsonResult = " + jsonResult);
+            log.debug("jsonResult = " + jsonResult);
             return jsonResult.toJavaObject(method.getGenericReturnType());
         } else if (data instanceof JSONArray jsonArray) {
-            System.out.println("jsonArray = " + jsonArray);
+            log.debug("jsonArray = " + jsonArray);
             return jsonArray.toJavaObject(method.getGenericReturnType());
         } else {
-            System.out.println("cast data = " + data);
+            log.debug("cast data = " + data);
             return cast(data, method.getReturnType());
         }
     }
@@ -30,7 +32,7 @@ public class TypeUtils {
         if (origin == null) {
             return null;
         }
-//        System.out.println("origin = " + origin);
+//        log.debug("origin = " + origin);
         Class<?> originClass = origin.getClass();
         // 如果原始对象可以直接赋值给目标类型，则直接返回原始对象
         if (type.isAssignableFrom(originClass)) {

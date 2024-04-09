@@ -8,3 +8,8 @@ app:
   id: app1
   namespace: public
   env: dev
+logging:
+  level:
+    root: INFO
+    org.springframework: INFO
+    com.flhai: DEBUG

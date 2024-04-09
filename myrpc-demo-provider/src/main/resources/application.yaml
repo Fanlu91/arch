@@ -7,3 +7,8 @@ app:
 myrpc:
   zkServers: localhost:2181
   zkNamespace: myrpc
+logging:
+  level:
+    root: INFO
+    org.springframework: INFO
+    com.flhai: DEBUG
