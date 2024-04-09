@@ -1,5 +1,6 @@
 package com.flhai.myrpc.core.consumer;
 
+import com.flhai.myrpc.core.api.Filter;
 import com.flhai.myrpc.core.api.RpcContext;
 import com.flhai.myrpc.core.api.RpcRequest;
 import com.flhai.myrpc.core.api.RpcResponse;
@@ -37,12 +38,31 @@ public class MyInvocationHandler implements InvocationHandler {
         rpcRequest.setService(serviceClass.getCanonicalName());
         rpcRequest.setMethodSign(MethodUtils.methodSign(method));
         rpcRequest.setParams(args);
-
         List<InstanceMeta> route = rpcContext.getRouter().route(providers);
+        List<Filter> filters = rpcContext.getFilters();
+        for (Filter filter : filters) {
+            RpcResponse preResponse = filter.preFilter(rpcRequest);
+            if (preResponse != null) {
+                log.debug(filter.getClass().getName() + "===> filter.preFilter = " + preResponse);
+
+                return castResponse(method, preResponse);
+            }
+        }
+
         InstanceMeta instance = rpcContext.getLoadBalancer().choose(route);
         String url = instance.toUrl();
         log.debug("===> loadBalancer.choose url = " + url);
         RpcResponse rpcResponse = httpInvoker.post(rpcRequest, url);
+
+        // 这里cache filter应该放在最后一个执行，否则缓存的结果可能不是最终结果，造成问题
+        for (Filter filter : filters) {
+            rpcResponse = filter.postFilter(rpcRequest, rpcResponse);
+        }
+
+        return castResponse(method, rpcResponse);
+    }
+
+    private static Object castResponse(Method method, RpcResponse rpcResponse) {
         if (rpcResponse.isStatus()) {
             Object data = rpcResponse.getData();
             return castMethodReturnType(method, data);

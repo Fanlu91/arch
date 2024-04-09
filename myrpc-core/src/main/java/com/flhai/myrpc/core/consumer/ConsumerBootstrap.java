@@ -1,10 +1,7 @@
 package com.flhai.myrpc.core.consumer;
 
 import com.flhai.myrpc.core.annotation.MyConsumer;
-import com.flhai.myrpc.core.api.LoadBalancer;
-import com.flhai.myrpc.core.api.RegistryCenter;
-import com.flhai.myrpc.core.api.Router;
-import com.flhai.myrpc.core.api.RpcContext;
+import com.flhai.myrpc.core.api.*;
 import com.flhai.myrpc.core.meta.InstanceMeta;
 import com.flhai.myrpc.core.meta.ServiceMeta;
 import com.flhai.myrpc.core.registry.ChangedListener;
@@ -64,15 +61,8 @@ public class ConsumerBootstrap implements ApplicationContextAware, EnvironmentAw
         RpcContext rpcContext = new RpcContext();
         rpcContext.setRouter(applicationContext.getBean(Router.class));
         rpcContext.setLoadBalancer(applicationContext.getBean(LoadBalancer.class));
-
+        rpcContext.setFilters(applicationContext.getBeansOfType(Filter.class).values().stream().toList());
         RegistryCenter registryCenter = applicationContext.getBean(RegistryCenter.class);
-
-//        String urls = environment.getProperty("myrpc.providers", "");
-//        if (urls.isEmpty()) {
-//            throw new RuntimeException("myrpc.providers is empty");
-//        }
-//        List<String> providers = List.of(urls.split(","));
-
 
         String[] beanDefinitionNames = applicationContext.getBeanDefinitionNames();
 
@@ -80,7 +70,7 @@ public class ConsumerBootstrap implements ApplicationContextAware, EnvironmentAw
             Object bean = applicationContext.getBean(beanName);
             List<Field> annotatedFields = findAnnotatedField(bean.getClass(), MyConsumer.class);
             if (annotatedFields.size() > 0) {
-                log.info("------------" + beanName + " has annotated fields");
+                log.info("===>" + beanName + " has annotated fields");
                 annotatedFields.stream().forEach(field -> {
                     Class<?> serviceClass = field.getType();
                     String serviceName = serviceClass.getCanonicalName();
