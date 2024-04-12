@@ -8,7 +8,6 @@
         <version>0.0.1-SNAPSHOT</version>
 <!--        <relativePath/>-->
     </parent>
-    <groupId>com.flhai</groupId>
     <artifactId>myrpc-core</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>myrpc-core</name>
@@ -20,16 +19,19 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
+            <version>${spring.boot.version}</version>
         </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
+            <version>1.18.30</version>
             <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
+            <version>${spring.boot.version}</version>
         </dependency>
         <dependency>
             <groupId>com.squareup.okhttp3</groupId>

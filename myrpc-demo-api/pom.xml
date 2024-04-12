@@ -8,7 +8,6 @@
 		<version>0.0.1-SNAPSHOT</version>
 <!--		<relativePath/>-->
 	</parent>
-	<groupId>com.flhai</groupId>
 	<artifactId>myrpc-demo-api</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>myrpc-demo-api</name>
@@ -20,10 +19,7 @@
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-web</artifactId>
+			<version>1.18.30</version>
 		</dependency>
 	</dependencies>
 </project>
