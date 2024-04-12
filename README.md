@@ -50,9 +50,128 @@ Spring Boot应用被打包成一个可执行jar（uber jar或fat jar）后，如
 进入Editor > Code Style > Java，选择Imports标签页。
 在这里，你可以设置如何管理和优化imports，比如可以勾选`Optimize imports on the fly`来自动整理imports
 
+
+
+## 4. 创建springboot项目的两种方式
+
+一般情况下，创建一个单个的springboot项目时，在项目的pom.xml文件里，指定当前项目的parent为spring-boot-starter-parent即可
+
+```xml
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.2.3</version>
+        <relativePath/> <!-- lookup parent from repository -->
+    </parent>
+```
+
+
+
+但是这种方式对于多模块项目存在一个严重问题：就是所有的子模块都必须是spring boot项目。很多时候我们的需求并不是这样。这时就需要第二种方式：**import 依赖管理**
+
+第一步，pom.xml中增加如下配置，这段配置跟parent一样，把需要的springboot依赖都加了进来。
+
+```xml
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>3.2.3</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+```
+
+这样操作之后，在 IDEA里已经可以编译运行，但mvn package是无法编译运行的，打出来的jar也不是加入了所有依赖的fat jar。
+
+这时就需要第二步，添加如下配置来实现打包springboot项目。
+
+```xml
+<build>
+    <plugins>
+        <plugin>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-maven-plugin</artifactId>
+            <executions>
+                <execution>
+                    <goals>
+                        <goal>repackage</goal>
+                    </goals>
+                </execution>
+            </executions>
+        </plugin>
+    </plugins>
+</build>
+```
+
+这样maven运行时就知道使用spring boot的插件来打包，并做repackage处理，把依赖的jar都打到fat jar里去。
+
+这个时候虽然可以打包了，但是我们会发现mvn package时单元测试没有执行。提示没有找到测试类。
+
+这时需要第三步也是最后一步，手工添加单元测试插件maven-surefire-plugin，以及对应于junit5的引擎surefire-junit-platform。
+
+```xml
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <version>3.2.3</version>
+            <dependencies>
+                <dependency>
+                    <groupId>org.apache.maven.surefire</groupId>
+                    <artifactId>surefire-junit-platform</artifactId>
+                    <version>3.2.3</version>
+                </dependency>
+            </dependencies>
+        </plugin>
+```
+
+加上了上面的配置，就可以正确运行了。
+
+
+
+## 5. exclude lombok
+
+下面这段pom配置为什么专门增加这个config？
+
+```xml
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <exclude>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                        </exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+```
+
+Lombok 是一个在编译时用来帮助简化代码的工具，而不是运行时所需的依赖。Lombok 通过注解处理器在编译时自动生成诸如 getter、setter、构造函数等代码。这意味着一旦代码被编译，Lombok 的工作就已经完成了，生成的字节码中不再需要 Lombok。
+
+这样exclue能够**减少最终包大小**，**避免运行时错误**，**清晰的依赖管理**。
+
+当然通常来说，为 Lombok 设置 `provided` 作用域是更简洁和推荐的做法，因为它通过 Maven 的标准机制自动处理依赖的包含情况，简化了配置并避免了可能的错误或遗漏。
+
+```xml
+<scope>provided</scope>
+```
+
+
+
+
+
 # 知识点
 
-## 4. @PostConstruct 注解
+## @PostConstruct 注解
 
 Person:
 
@@ -89,7 +208,7 @@ public class StartupBean {
     @PostConstruct
     public void init() {
         // 执行初始化逻辑，比如加载配置文件
-        log.info("系统启动，执行初始化任务...");
+        System.out.println("系统启动，执行初始化任务...");
     }
 }
 ```
