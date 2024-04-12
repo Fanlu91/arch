@@ -1,6 +1,7 @@
 package com.flhai.myrpc.core.registry.zk;
 
 import com.flhai.myrpc.core.api.RegistryCenter;
+import com.flhai.myrpc.core.api.RpcException;
 import com.flhai.myrpc.core.meta.InstanceMeta;
 import com.flhai.myrpc.core.meta.ServiceMeta;
 import com.flhai.myrpc.core.registry.ChangedListener;
@@ -62,7 +63,7 @@ public class ZkRegistryCenter implements RegistryCenter {
             log.info("===>register instance to zk : " + instancePath);
             client.create().withMode(CreateMode.EPHEMERAL).forPath(instancePath, "provider".getBytes());
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new RpcException(e);
         }
     }
 
@@ -79,7 +80,7 @@ public class ZkRegistryCenter implements RegistryCenter {
             String instancePath = servicePath + "/" + instance;
             client.delete().quietly().forPath(instancePath);
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new RpcException(e);
         }
     }
 
@@ -93,7 +94,7 @@ public class ZkRegistryCenter implements RegistryCenter {
             List<InstanceMeta> instanceMetaList = mapInstanceMeta(nodes);
             return instanceMetaList;
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new RpcException(e);
         }
     }
 

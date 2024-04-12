@@ -1,6 +1,7 @@
 package com.flhai.myrpc.core.consumer.http;
 
 import com.alibaba.fastjson.JSON;
+import com.flhai.myrpc.core.api.RpcException;
 import com.flhai.myrpc.core.api.RpcRequest;
 import com.flhai.myrpc.core.api.RpcResponse;
 import com.flhai.myrpc.core.consumer.HttpInvoker;
@@ -39,7 +40,7 @@ public class OkHttpInvoker implements HttpInvoker {
         } catch (ClassCastException e) {
             return new RpcResponse(false, null, e);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new RpcException(e);
         }
     }
 }

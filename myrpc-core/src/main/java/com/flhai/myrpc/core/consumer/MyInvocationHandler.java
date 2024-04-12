@@ -1,9 +1,6 @@
 package com.flhai.myrpc.core.consumer;
 
-import com.flhai.myrpc.core.api.Filter;
-import com.flhai.myrpc.core.api.RpcContext;
-import com.flhai.myrpc.core.api.RpcRequest;
-import com.flhai.myrpc.core.api.RpcResponse;
+import com.flhai.myrpc.core.api.*;
 import com.flhai.myrpc.core.consumer.http.OkHttpInvoker;
 import com.flhai.myrpc.core.meta.InstanceMeta;
 import com.flhai.myrpc.core.util.MethodUtils;
@@ -71,8 +68,13 @@ public class MyInvocationHandler implements InvocationHandler {
             Object data = rpcResponse.getData();
             return castMethodReturnType(method, data);
         } else {
-            Exception ex = rpcResponse.getEx();
-            throw new RuntimeException(ex);
+            Exception exception = rpcResponse.getEx();
+            if (exception instanceof RpcException ex) {
+                throw ex;
+            } else {
+                throw new RpcException(exception, RpcException.UnknownEx);
+            }
+
         }
     }
 

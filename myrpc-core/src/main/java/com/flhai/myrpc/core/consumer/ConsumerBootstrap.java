@@ -84,7 +84,7 @@ public class ConsumerBootstrap implements ApplicationContextAware, EnvironmentAw
                     try {
                         field.set(bean, consumer);
                     } catch (IllegalAccessException e) {
-                        throw new RuntimeException(e);
+                        throw new RpcException(e);
                     }
                     stub.put(serviceName, consumer);
                 });
@@ -106,7 +106,7 @@ public class ConsumerBootstrap implements ApplicationContextAware, EnvironmentAw
         providers.forEach(System.out::println);
 
         if (providers.isEmpty()) {
-            throw new RuntimeException("no provider found for service: " + serviceName);
+            throw new RpcException("no provider found for service: " + serviceName);
         }
 
         registryCenter.subscribe(serviceMeta, new ChangedListener() {

@@ -1,5 +1,6 @@
 package com.flhai.myrpc.core.provider;
 
+import com.flhai.myrpc.core.api.RpcException;
 import com.flhai.myrpc.core.api.RpcRequest;
 import com.flhai.myrpc.core.api.RpcResponse;
 import com.flhai.myrpc.core.meta.ProviderMeta;
@@ -47,9 +48,14 @@ public class ProviderInvoker {
             // 这里的e是InvocationTargetException 反射异常
             // 我们从中取出原始异常
             rpcResponse.setStatus(false);
-            rpcResponse.setEx(new RuntimeException(e.getTargetException().getMessage()));
+            rpcResponse.setEx(new RpcException(e.getTargetException().getMessage()));
             rpcResponse.setData(e.getTargetException().getMessage());
-        } catch (Exception e) {
+        }catch (IllegalAccessException e) {
+            rpcResponse.setStatus(false);
+            rpcResponse.setEx(new RpcException(e.getMessage()));
+            rpcResponse.setData(e.getMessage());
+        }
+        catch (Exception e) {
             e.printStackTrace();
             rpcResponse.setStatus(false);
             rpcResponse.setEx(e);
@@ -61,7 +67,7 @@ public class ProviderInvoker {
         ProviderMeta providerMeta = providerMetas.stream().filter(
                         p -> p.getSignName().equals(methodSign)
                 ).findFirst()
-                .orElseThrow(() -> new RuntimeException("no such method with sign"
+                .orElseThrow(() -> new RpcException("no such method with sign"
                         + methodSign + " in provider " + request.getService()));
         return providerMeta;
     }

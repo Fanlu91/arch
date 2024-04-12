@@ -1,5 +1,7 @@
 package com.flhai.myrpc.core.util;
 
+import com.flhai.myrpc.core.api.RpcException;
+
 import java.lang.reflect.*;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -67,13 +69,13 @@ public class MockUtil {
         try {
             result = type.getDeclaredConstructor().newInstance();
         } catch (InstantiationException e) {
-            throw new RuntimeException(e);
+            throw new RpcException(e);
         } catch (IllegalAccessException e) {
-            throw new RuntimeException(e);
+            throw new RpcException(e);
         } catch (InvocationTargetException e) {
-            throw new RuntimeException(e);
+            throw new RpcException(e);
         } catch (NoSuchMethodException e) {
-            throw new RuntimeException(e);
+            throw new RpcException(e);
         }
         Field[] fields = type.getDeclaredFields();
         for (Field f : fields) {
@@ -83,7 +85,7 @@ public class MockUtil {
             try {
                 f.set(result, fValue);
             } catch (IllegalAccessException e) {
-                throw new RuntimeException(e);
+                throw new RpcException(e);
             }
         }
         return result;
