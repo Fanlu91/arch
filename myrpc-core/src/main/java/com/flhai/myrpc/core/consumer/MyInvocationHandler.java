@@ -41,11 +41,10 @@ public class MyInvocationHandler implements InvocationHandler {
         List<InstanceMeta> route = rpcContext.getRouter().route(providers);
         List<Filter> filters = rpcContext.getFilters();
         for (Filter filter : filters) {
-            RpcResponse preResponse = filter.preFilter(rpcRequest);
-            if (preResponse != null) {
-                log.debug(filter.getClass().getName() + "===> filter.preFilter = " + preResponse);
-
-                return castResponse(method, preResponse);
+            Object preResult = filter.preFilter(rpcRequest);
+            if (preResult != null) {
+                log.debug(filter.getClass().getName() + " ==> prefilter: " + preResult);
+                return preResult;
             }
         }
 
@@ -55,20 +54,24 @@ public class MyInvocationHandler implements InvocationHandler {
         RpcResponse rpcResponse = httpInvoker.post(rpcRequest, url);
 
         // 这里cache filter应该放在最后一个执行，否则缓存的结果可能不是最终结果，造成问题
+        Object result = castReturnResult(method, rpcResponse);
+
         for (Filter filter : filters) {
-            rpcResponse = filter.postFilter(rpcRequest, rpcResponse);
+            Object filterResult = filter.postFilter(rpcRequest, rpcResponse, result);
+            if (filterResult != null) {
+                return filterResult;
+            }
         }
 
-        return castResponse(method, rpcResponse);
+        return result;
     }
 
-    private static Object castResponse(Method method, RpcResponse rpcResponse) {
+    private static Object castReturnResult(Method method, RpcResponse<?> rpcResponse) {
         if (rpcResponse.isStatus()) {
             Object data = rpcResponse.getData();
             return castMethodReturnType(method, data);
         } else {
             Exception ex = rpcResponse.getEx();
-//            ex.printStackTrace();
             throw new RuntimeException(ex);
         }
     }

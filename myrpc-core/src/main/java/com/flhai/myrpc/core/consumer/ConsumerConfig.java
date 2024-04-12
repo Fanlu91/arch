@@ -5,7 +5,7 @@ import com.flhai.myrpc.core.api.LoadBalancer;
 import com.flhai.myrpc.core.api.RegistryCenter;
 import com.flhai.myrpc.core.api.Router;
 import com.flhai.myrpc.core.cluster.RoundRibonLoadBalancer;
-import com.flhai.myrpc.core.filter.CacheFilter;
+import com.flhai.myrpc.core.filter.MockFilter;
 import com.flhai.myrpc.core.registry.zk.ZkRegistryCenter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -51,8 +51,13 @@ public class ConsumerConfig {
         return new ZkRegistryCenter();
     }
 
+//    @Bean
+//    public Filter filter1() {
+//        return new CacheFilter();
+//    }
+
     @Bean
-    public Filter filter() {
-        return new CacheFilter();
+    public Filter filter2() {
+        return new MockFilter();
     }
 }

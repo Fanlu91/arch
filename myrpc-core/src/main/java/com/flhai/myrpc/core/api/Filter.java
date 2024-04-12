@@ -1,20 +1,20 @@
 package com.flhai.myrpc.core.api;
 
 public interface Filter {
-    RpcResponse preFilter(RpcRequest request);
+    Object preFilter(RpcRequest request);
 
-    RpcResponse postFilter(RpcRequest request, RpcResponse response);
+    Object postFilter(RpcRequest request, RpcResponse response, Object result);
 
     //    Filter next();
     Filter DEFAULT = new Filter() {
         @Override
-        public RpcResponse preFilter(RpcRequest request) {
+        public Object preFilter(RpcRequest request) {
             return null;
         }
 
         @Override
-        public RpcResponse postFilter(RpcRequest request, RpcResponse response) {
-            return response;
+        public Object postFilter(RpcRequest request, RpcResponse response, Object result) {
+            return null;
         }
     };
 }

@@ -15,16 +15,16 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class CacheFilter implements Filter {
     // 优化 guava cache，容量和过期时间
-    Map<String, RpcResponse> cache = new ConcurrentHashMap<>();
+    static Map<String, Object> cache = new ConcurrentHashMap<>();
 
     @Override
-    public RpcResponse preFilter(RpcRequest request) {
+    public Object preFilter(RpcRequest request) {
         return cache.get(request.toString());
     }
 
     @Override
-    public RpcResponse postFilter(RpcRequest request, RpcResponse response) {
-        cache.putIfAbsent(request.toString(), response);
-        return response;
+    public Object postFilter(RpcRequest request, RpcResponse response, Object result)  {
+        cache.putIfAbsent(request.toString(), result);
+        return result;
     }
 }
