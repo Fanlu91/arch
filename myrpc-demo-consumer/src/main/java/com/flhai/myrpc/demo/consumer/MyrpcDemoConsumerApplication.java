@@ -11,6 +11,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Arrays;
@@ -31,10 +32,25 @@ public class MyrpcDemoConsumerApplication {
 //    OrderService orderService;
 
     @RequestMapping("/")
-    public User findBy(int id) {
+    public User findBy(@RequestParam("id") int id) {
         // find the service
-        log.debug("findBy id = " + id);
+//        log.debug("findBy id = " + id);
+//        long start = System.currentTimeMillis();
+//        userService.timeoutFind(800);
+//        System.out.println("timeoutFind cost: " + (System.currentTimeMillis() - start) + "ms");
         return userService.findById(id);
+    }
+
+    /**
+     * http://localhost:9088/timeout?t=800
+     * @param t
+     * @return
+     */
+    @RequestMapping("/timeout")
+    public String testTimeout(@RequestParam("t") int t) {
+        long start = System.currentTimeMillis();
+        String service = userService.timeoutFind(t);
+        return "service " + service + " time cost: " + (System.currentTimeMillis() - start) + "ms";
     }
 
     public static void main(String[] args) {
@@ -135,7 +151,7 @@ public class MyrpcDemoConsumerApplication {
         try {
             User userEx = userService.ex(true);
             log.info(userEx.toString());
-        } catch (RuntimeException e) {
+        } catch (Exception e) {
             log.info(" ===> exception: " + e.getMessage());
         }
     }

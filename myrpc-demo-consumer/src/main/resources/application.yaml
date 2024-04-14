@@ -8,6 +8,13 @@ app:
   id: app1
   namespace: public
   env: dev
+  retry:
+    max: 2
+  timeout:
+    default: 2000
+    connect: 3000
+    read: 3000
+    write: 3000
 logging:
   level:
     root: INFO

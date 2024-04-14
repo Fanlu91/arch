@@ -43,6 +43,11 @@ public class ConsumerBootstrap implements ApplicationContextAware, EnvironmentAw
     @Value("${app.env}")
     private String env;
 
+    @Value("${app.retry.max}")
+    private int retries;
+
+    @Value("${app.timeout.default}")
+    private int timeout;
     private Map<String, Object> stub = new HashMap<>();
 
     @Override
@@ -62,6 +67,8 @@ public class ConsumerBootstrap implements ApplicationContextAware, EnvironmentAw
         rpcContext.setRouter(applicationContext.getBean(Router.class));
         rpcContext.setLoadBalancer(applicationContext.getBean(LoadBalancer.class));
         rpcContext.setFilters(applicationContext.getBeansOfType(Filter.class).values().stream().toList());
+        rpcContext.getParameters().put("retries", String.valueOf(retries));
+        rpcContext.getParameters().put("timeout", String.valueOf(timeout));
         RegistryCenter registryCenter = applicationContext.getBean(RegistryCenter.class);
 
         String[] beanDefinitionNames = applicationContext.getBeanDefinitionNames();

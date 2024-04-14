@@ -57,12 +57,12 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public int[] getIds() {
-        return new int[] {100,200,300};
+        return new int[]{100, 200, 300};
     }
 
     @Override
     public long[] getLongIds() {
-        return new long[]{1,2,3};
+        return new long[]{1, 2, 3};
     }
 
     @Override
@@ -102,7 +102,20 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User ex(boolean flag) {
-        if(flag) throw new RuntimeException("just throw an exception");
+        if (flag) throw new RuntimeException("just throw an exception");
         return new User(100, "KK100");
+    }
+
+    @Override
+    public String timeoutFind(int timeout) {
+        String port = environment.getProperty("server.port");
+        if (port.equals("8081")) {
+            try {
+                Thread.sleep(timeout);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        return port;
     }
 }

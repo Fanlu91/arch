@@ -34,4 +34,6 @@ public interface UserService {
     User findById(long id);
 
     User ex(boolean flag);
+
+    String timeoutFind(int timeout);
 }
