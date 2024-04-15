@@ -12,3 +12,5 @@ logging:
     root: INFO
     org.springframework: INFO
     com.flhai: DEBUG
+  pattern:
+    console: "%d{HH:mm:ss} %-5level - %msg%n"

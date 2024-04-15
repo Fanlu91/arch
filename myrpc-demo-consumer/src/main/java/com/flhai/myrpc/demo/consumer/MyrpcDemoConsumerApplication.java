@@ -53,6 +53,19 @@ public class MyrpcDemoConsumerApplication {
         return "service " + service + " time cost: " + (System.currentTimeMillis() - start) + "ms";
     }
 
+    /**
+     * todo 这里指改变了1个服务提供者的超时时间，可能真正想改的那个没有被改到
+     * http://localhost:9088/timeoutPorts?ports=8081,8094
+     * 修改模拟超时端口
+     * @param ports
+     * @return
+     */
+    @RequestMapping("/timeoutPorts")
+    public String testTimeoutPorts(@RequestParam("ports") String ports) {
+        userService.setTimeoutPorts(ports);
+        return "timeoutPorts: " + ports;
+    }
+
     public static void main(String[] args) {
         SpringApplication.run(MyrpcDemoConsumerApplication.class, args);
     }

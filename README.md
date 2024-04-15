@@ -50,8 +50,6 @@ Spring Boot应用被打包成一个可执行jar（uber jar或fat jar）后，如
 进入Editor > Code Style > Java，选择Imports标签页。
 在这里，你可以设置如何管理和优化imports，比如可以勾选`Optimize imports on the fly`来自动整理imports
 
-
-
 ## 4. 创建springboot项目的两种方式
 
 一般情况下，创建一个单个的springboot项目时，在项目的pom.xml文件里，指定当前项目的parent为spring-boot-starter-parent即可
@@ -64,8 +62,6 @@ Spring Boot应用被打包成一个可执行jar（uber jar或fat jar）后，如
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
 ```
-
-
 
 但是这种方式对于多模块项目存在一个严重问题：就是所有的子模块都必须是spring boot项目。很多时候我们的需求并不是这样。这时就需要第二种方式：**import 依赖管理**
 
@@ -130,8 +126,6 @@ Spring Boot应用被打包成一个可执行jar（uber jar或fat jar）后，如
 
 加上了上面的配置，就可以正确运行了。
 
-
-
 ## 5. exclude lombok
 
 下面这段pom配置为什么专门增加这个config？
@@ -164,8 +158,6 @@ Lombok 是一个在编译时用来帮助简化代码的工具，而不是运行�
 ```xml
 <scope>provided</scope>
 ```
-
-
 
 
 
@@ -247,7 +239,7 @@ ChatGPT:
 Pattern matching involves testing whether an object has a particular structure, then extracting data from that object if
 there's a match.
 
-```
+```java
 if(rpcResponse.isStatus()){
     Object data = rpcResponse.getData();
     if(data instanceof JSONObject jsonResult) {
@@ -280,7 +272,37 @@ router 是根据一定规则（非负载角度的），进行服务的路由，�
 在规模和并发不大的情况下，性能角度 RR 和复杂算法没有区别。
 只有在规模和并发大的情况下，复杂算法才能体现出优势。
 
+## SpringApplication.exit(context, () -> 0)
 
+```java
+@PreDestroy
+void destroy() {
+    SpringApplication.exit(context, () -> 0);
+}
+```
+
+- **`SpringApplication.exit(context, () -> 0);`**：这行代码的功能是优雅地关闭 Spring 应用上下文。`SpringApplication.exit` 方法接收两个参数：
+  
+  - **`context`**：这是你想要关闭的 `ConfigurableApplicationContext` 对象，即 Spring 应用的上下文。
+  - **`() -> 0`**：这是一个 Java Lambda 表达式，它实现了 `org.springframework.boot.ExitCodeGenerator` 接口。这个接口用于在应用退出时提供一个退出代码。在这个例子中，它总是返回 `0`，通常表示程序正常退出。
+
+
+
+## provider节点故障处理
+
+1. 有节点宕机时，通过多个provider集群+注册中心，可以保障整体的可用
+
+2. 有节点偶尔异常但没有宕机，可以通过重试+LB重选节点，实现这次调用
+
+3. 有节点在一段时间内异常（这个实例上有很多服务，其中个别服务慢），没宕机，其他服务一直是好的，把这些节点识别出来做到故障隔离
+   
+   - 通过探活再做故障恢复，full open
+   
+   - 每次定时探活，放一部分流量，half open
+   
+   
+
+## Logback 的默认配置
 
 
 
@@ -302,14 +324,11 @@ Transfer/sec:      0.92MB
 
 
 wrk "http://localhost:9088/?id=101" -d3s
-
 ```
 
 ## arthas
 
 [命令列表 | arthas](https://arthas.aliyun.com/doc/commands.html)
-
-
 
 ```less
 ➜  arthas-bin java -jar arthas-boot.jar
@@ -318,5 +337,126 @@ dashboard
 
 sc com.flhai.myrpc.*
 trace com.flhai.myrpc.core.consumer.MyInvocationHandler invoke
-
 ```
+
+
+
+## springboot log
+
+### `@Slf4j`
+
+`@Slf4j` 是一个 Lombok 提供的注解，用于在 Java 类中自动注入一个日志对象（即 `Logger`）。即一般情况下在为类加上@Slf4j，就可以直接使用Log及其方法了，非常方便。
+
+```java
+@Slf4j
+public class MyInvocationHandler implements InvocationHandler {
+    public static void main(String[] args) {
+        log.debug("hello");
+    }
+```
+
+这个注解背后的 SLF4J（Simple Logging Facade for Java）是一个日志门面，它提供了一个 Java 的日志 API。SLF4J 允许开发者在代码中使用统一的日志 API，而不依赖于具体的日志实现框架，从而使得可以在不同的日志框架之间（如 Logback、Log4J）切换而不需要修改主代码。
+
+### logging
+
+在 `application.yml` 或 `application.properties` 文件中的 `logging` 配置是 Spring Boot 提供的一种方式，允许开发者在不直接接触底层日志框架的情况下配置日志行为。这种配置方式是对底层日志框架（如 Logback 或 Log4J2）的封装，使得配置更加简洁并且与 Spring Boot 应用的集成更加无缝。
+
+```yaml
+logging:
+  level:
+    root: INFO
+    org.springframework: INFO
+    com.flhai: DEBUG
+  pattern:
+    console: "%d{HH:mm:ss} %-5level - %msg%n"
+```
+
+#### pattern 深入
+
+上面yaml中，对日志的pattern进行了定制
+
+- `application.yml` 中使用 `logging.pattern.console` 来设置你的自定义格式
+
+打印出的日志会很简洁，类似这样
+
+```less
+11:28:05 DEBUG - retry = 1
+```
+
+- `%-5level`：显示日志级别，例如 `INFO`，并保留固定宽度5。
+- `%msg`：显示实际的日志消息。
+- `%n`：表示新行。
+
+这种设置比较适合本地开发调试。
+
+在 Spring Boot 中，如果没有显式设置日志格式，它会使用 Logback 的默认配置，类似这样
+
+```less
+2024-04-15T11:24:33.785+08:00  INFO 99167 --- [myrpc-demo-api] [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+```
+
+它对应的pattern是
+
+```less
+%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX}  %5p [%appName] [%thread] %c{1} : %m%n
+```
+
+- `%5p`：日志级别（如 INFO、DEBUG），这里的 `5` 表示日志级别字段至少占用五个字符，左对齐。
+- `%c{1}`：记录器的名称，这里的 `{1}` 表示只显示最后一个元素的类名或记录器名。
+- `[%thread]`：表示生成日志条目的线程名。
+- `[app name]`：应用程序的名称，通常在日志配置中通过 `spring.application.name` 属性设置。
+
+### Logback
+
+当你在使用 `@Slf4j` 注解的项目中，实际上你的代码与具体的日志实现（如 Logback 或 Log4j）是解耦的。你需要查看项目的依赖管理文件（如 Maven 的 `pom.xml` 或 Gradle 的 `build.gradle`），以确定你的项目是引用了 Logback 还是 Log4j 的依赖。
+
+Spring Boot，或者说`spring-boot-starter-web` 包括 `spring-boot-starter-logging`默认使用 Logback。
+
+如果需要简单的配置和良好的性能，且不需要复杂的日志处理功能，Logback 是一个很好的选择。
+
+### Log4j2
+
+Log4j2 通常提供比 Logback 更高的性能，特别是在多线程环境中，因为 Log4j2 的设计包括了异步日志处理的支持。
+
+两者都兼容 SLF4J，但 Log4j2 提供了更多高级配置选项，包括更复杂的过滤器和异步日志处理，自身有一个单独的 Log4j2 API，这可能在某些使用场景下提供额外的功能。
+
+Log4j2 是较新的技术，其可能拥有更多关于现代日志处理特性（如对 **JSON 格式的天然支持**）的支持
+
+要使用 Log4j2，你需要排除默认的 Logback 依赖，并添加对 Log4j2 的支持
+
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-web</artifactId>
+    <exclusions>
+        <exclusion>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-logging</artifactId>
+        </exclusion>
+    </exclusions>
+</dependency>
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-log4j2</artifactId>
+</dependency>
+```
+
+
+
+
+
+# 问题记录
+
+[kkrpc-core/src/main/java/cn/kimmking/kkrpc/core/consumer/KKInvocationHandler.java · ArchCamp/kkrpc - Gitee.com](https://gitee.com/ArchCamp/kkrpc/blob/V09/kkrpc-core/src/main/java/cn/kimmking/kkrpc/core/consumer/KKInvocationHandler.java)
+
+```java
+                synchronized (providers) {
+                    if (!providers.contains(instance)) {
+                        isolatedProviders.remove(instance);
+                        providers.add(instance);
+                        log.debug("instance {} is recovered, isolatedProviders={}, providers={}", instance, isolatedProviders, providers);
+                    }
+                }
+```
+
+这里第一次隔离之后就又恢复了

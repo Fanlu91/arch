@@ -11,7 +11,7 @@ app:
   retry:
     max: 2
   timeout:
-    default: 2000
+    default: 1000
     connect: 3000
     read: 3000
     write: 3000
@@ -20,3 +20,5 @@ logging:
     root: INFO
     org.springframework: INFO
     com.flhai: DEBUG
+  pattern:
+    console: "%d{HH:mm:ss} %-5level - %msg%n"

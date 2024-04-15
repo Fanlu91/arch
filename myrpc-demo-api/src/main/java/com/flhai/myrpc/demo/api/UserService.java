@@ -36,4 +36,6 @@ public interface UserService {
     User ex(boolean flag);
 
     String timeoutFind(int timeout);
+
+    void setTimeoutPorts(String ports);
 }
