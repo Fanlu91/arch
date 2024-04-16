@@ -78,11 +78,15 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User[] findUsers(User[] users) {
+        users[0].setName("reset_name_by_provider");
         return users;
     }
 
     @Override
     public List<User> getList(List<User> userList) {
+        User[] users = userList.toArray(new User[0]);
+        Arrays.stream(users).forEach(System.out::println);
+        userList.add(new User(10011, "added_by_provider"));
         return userList;
     }
 

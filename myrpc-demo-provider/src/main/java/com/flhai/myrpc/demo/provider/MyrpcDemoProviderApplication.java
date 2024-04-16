@@ -37,12 +37,7 @@ public class MyrpcDemoProviderApplication {
     @Bean
     ApplicationRunner runner() {
         return args -> {
-//            var request = new RpcRequest();
-//            request.setService("com.flhai.myrpc.demo.api.UserService");
-//            request.setMethod("findById");
-//            request.setParams(new Object[]{100});
-//            RpcResponse response = invoke(request);
-//            log.info("return: " + response.getData());
+
 
 //            request.setService("com.flhai.myrpc.demo.api.OrderService");
 //            request.setMethod("findOrderById");
@@ -59,7 +54,18 @@ public class MyrpcDemoProviderApplication {
 //            request.setMethodSign("findById@2_int_java.lang.String");
 //            request.setParams(new Object[]{100, "fhai"});
 //            RpcResponse response = invoke(request);
-//            log.info("return: " + response.toString());
+//            System.out.println("return: " + response.toString());
+
+//            var request = new RpcRequest();
+//            request.setService("com.flhai.myrpc.demo.api.UserService");
+//            request.setMethodSign("getList@1_java.util.List");
+//            request.setParams(new Object[]{List.of(
+//                    new User(100, "KK100"),
+//                    new User(101, "KK101"),
+//                    new User(102, "KK102"))});
+//            RpcResponse response = invoke(request);
+//            System.out.println("return: " + response.toString());
         };
     }
 }
+

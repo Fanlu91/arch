@@ -7,16 +7,19 @@ import com.flhai.myrpc.core.meta.ProviderMeta;
 import com.flhai.myrpc.core.util.MethodUtils;
 import com.flhai.myrpc.core.util.TypeUtils;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.MultiValueMap;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Type;
 import java.util.List;
 
 /**
  * 把构建和执行provider分开
  */
 @Data
+@Slf4j
 public class ProviderInvoker {
     private MultiValueMap<String, ProviderMeta> skeleton;
 
@@ -37,7 +40,8 @@ public class ProviderInvoker {
             //  Method method = findMethod(bean, request.getMethodSign(), request.getParams());
             ProviderMeta providerMeta = getProviderMeta(request, methodSign, providerMetas);
             Method method = providerMeta.getMethod();
-            Object[] params = processParams(request.getParams(), method.getParameterTypes());
+
+            Object[] params = processParams(request.getParams(), method.getParameterTypes(), method.getGenericParameterTypes());
 //            log.debug("params length = " + params.length);
 //            log.debug(params[0].getClass().getName());
 //            log.debug(providerMeta.getSignName());
@@ -47,16 +51,16 @@ public class ProviderInvoker {
         } catch (InvocationTargetException e) {
             // 这里的e是InvocationTargetException 反射异常
             // 我们从中取出原始异常
+            log.warn("InvocationTargetException: ", e);
             rpcResponse.setStatus(false);
             rpcResponse.setEx(new RpcException(e.getTargetException().getMessage()));
             rpcResponse.setData(e.getTargetException().getMessage());
-        }catch (IllegalAccessException e) {
+        } catch (IllegalAccessException e) {
             rpcResponse.setStatus(false);
             rpcResponse.setEx(new RpcException(e.getMessage()));
             rpcResponse.setData(e.getMessage());
-        }
-        catch (Exception e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            log.warn("invoke error", e.getMessage());
             rpcResponse.setStatus(false);
             rpcResponse.setEx(e);
         }
@@ -72,13 +76,13 @@ public class ProviderInvoker {
         return providerMeta;
     }
 
-    private Object[] processParams(Object[] params, Class<?>[] parameterTypes) {
+    private Object[] processParams(Object[] params, Class<?>[] parameterTypes, Type[] genericParameterTypes) {
         if (params == null || params.length == 0) {
             return new Object[0];
         }
         Object[] result = new Object[params.length];
         for (int i = 0; i < params.length; i++) {
-            result[i] = TypeUtils.cast(params[i], parameterTypes[i]);
+            result[i] = TypeUtils.castGeneric(params[i], parameterTypes[i], genericParameterTypes[i]);
 //            log.debug("-----param [i] = " + result[i]);
         }
         return result;

@@ -5,6 +5,7 @@ import com.flhai.myrpc.core.api.RpcException;
 import java.lang.reflect.*;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class MockUtil {
@@ -42,14 +43,14 @@ public class MockUtil {
             return array;
         }
         // 检查是否是List类型
-        if (type.isAssignableFrom(java.util.List.class)) {
+        if (type.isAssignableFrom(List.class)) {
             ParameterizedType parameterizedType = (ParameterizedType) genericType;
 //            Class listType = (Class) parameterizedType.getRawType();
             Class itemType = (Class) parameterizedType.getActualTypeArguments()[0];
             return Arrays.asList(mock(itemType));
         }
         // 检查是否是Map类型
-        if (type.isAssignableFrom(java.util.Map.class)) {
+        if (type.isAssignableFrom(Map.class)) {
             ParameterizedType parameterizedType = (ParameterizedType) genericType;
 //            Class mapType = (Class) parameterizedType.getRawType();
             Class keyType = (Class) parameterizedType.getActualTypeArguments()[0];

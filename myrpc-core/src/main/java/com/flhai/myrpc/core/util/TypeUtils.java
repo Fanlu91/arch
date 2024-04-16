@@ -1,110 +1,142 @@
 package com.flhai.myrpc.core.util;
 
-import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.List;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.util.*;
+
+/**
+ * 类型转换工具类。
+ *
+ * @Author : kimmking(kimmking@apache.org)
+ * @create 2024/3/13 20:51
+ */
 
 @Slf4j
 public class TypeUtils {
 
-    public static Object castMethodReturnType(Method method, Object data) {
-//        log.debug("data = " + data);
-//        log.debug("method.getReturnType() = " + method.getReturnType());
-//        log.debug("method.getGenericReturnType = " + method.getGenericReturnType());
-        if (data instanceof JSONObject jsonResult) {
-            log.debug("jsonResult = " + jsonResult);
-            return jsonResult.toJavaObject(method.getGenericReturnType());
-        } else if (data instanceof JSONArray jsonArray) {
-            log.debug("jsonArray = " + jsonArray);
-            return jsonArray.toJavaObject(method.getGenericReturnType());
-        } else {
-            log.debug("cast data = " + data);
-            return cast(data, method.getReturnType());
-        }
-    }
-
     public static Object cast(Object origin, Class<?> type) {
-        if (origin == null) {
-            return null;
-        }
-//        log.debug("origin = " + origin);
-        Class<?> originClass = origin.getClass();
-        // 如果原始对象可以直接赋值给目标类型，则直接返回原始对象
-        if (type.isAssignableFrom(originClass)) {
+        if (origin == null) return null;
+        Class<?> aClass = origin.getClass();
+        if (type.isAssignableFrom(aClass)) {
             return origin;
         }
 
-        // 如果原始对象是HashMap且目标类型不是数组，使用fastjson将map转换为目标对象
-        if (origin instanceof HashMap && !type.isArray()) {
-            JSONObject jsonObject = new JSONObject((HashMap) origin);
+        if (type.isArray()) {
+            if (origin instanceof List list) {
+                origin = list.toArray();
+            }
+            int length = Array.getLength(origin);
+            Class<?> componentType = type.getComponentType();
+            Object resultArray = Array.newInstance(componentType, length);
+            for (int i = 0; i < length; i++) {
+                if (componentType.isPrimitive() || componentType.getPackageName().startsWith("java")) {
+                    Array.set(resultArray, i, Array.get(origin, i));
+                } else {
+                    Object castObject = cast(Array.get(origin, i), componentType);
+                    Array.set(resultArray, i, castObject);
+                }
+            }
+            return resultArray;
+        }
+
+        if (origin instanceof HashMap map) {
+            JSONObject jsonObject = new JSONObject(map);
             return jsonObject.toJavaObject(type);
         }
 
-        // 处理目标类型为数组的情况
-        // 处理数组类型的转换
-        if (type.isArray()) {
-            JSONArray jsonArray = null;
-            // 将List转换为JSONArray
-            if (origin instanceof List) {
-                jsonArray = new JSONArray((List) origin);
-            }
-            // 如果origin本身就是JSONArray
-            else if (origin instanceof JSONArray) {
-                jsonArray = (JSONArray) origin;
-            }
-            // 将String转换为JSONArray
-            else if (origin instanceof String) {
-                jsonArray = JSONArray.parseArray((String) origin);
-            }
+        if (origin instanceof JSONObject jsonObject) {
+            return jsonObject.toJavaObject(type);
+        }
 
-            if (jsonArray != null) {
-                // 对原始类型数组进行特殊处理
-                if (type.getComponentType().isPrimitive()) {
-                    Object array = Array.newInstance(type.getComponentType(), jsonArray.size());
-                    for (int i = 0; i < jsonArray.size(); i++) {
-                        Array.set(array, i, jsonArray.get(i));
-                    }
-                    return array;
-                } else {
-                    // 对象类型数组可以直接使用toArray转换
-//                    return jsonArray.toArray((Object[]) Array.newInstance(type.getComponentType(), jsonArray.size()));
-                    // 创建一个指定类型的数组实例
-                    Object array = Array.newInstance(type.getComponentType(), jsonArray.size());
-                    for (int i = 0; i < jsonArray.size(); i++) {
-                        // 使用toJavaObject转换每个元素，确保类型匹配
-                        Array.set(array, i, jsonArray.getJSONObject(i).toJavaObject(type.getComponentType()));
-                    }
-                    return array;
+        if (type.equals(Integer.class) || type.equals(Integer.TYPE)) {
+            return Integer.valueOf(origin.toString());
+        } else if (type.equals(Long.class) || type.equals(Long.TYPE)) {
+            return Long.valueOf(origin.toString());
+        } else if (type.equals(Float.class) || type.equals(Float.TYPE)) {
+            return Float.valueOf(origin.toString());
+        } else if (type.equals(Double.class) || type.equals(Double.TYPE)) {
+            return Double.valueOf(origin.toString());
+        } else if (type.equals(Byte.class) || type.equals(Byte.TYPE)) {
+            return Byte.valueOf(origin.toString());
+        } else if (type.equals(Short.class) || type.equals(Short.TYPE)) {
+            return Short.valueOf(origin.toString());
+        } else if (type.equals(Character.class) || type.equals(Character.TYPE)) {
+            return Character.valueOf(origin.toString().charAt(0));
+        } else if (type.equals(Boolean.class) || type.equals(Boolean.TYPE)) {
+            return Boolean.valueOf(origin.toString());
+        }
+
+        log.error("not support cast from " + origin.getClass().getName() + " to " + type.getName());
+        return null;
+
+    }
+
+    public static Object castMethodReturnType(Method method, Object data) {
+        Class<?> type = method.getReturnType();
+        Type genericReturnType = method.getGenericReturnType();
+        return castGeneric(data, type, genericReturnType);
+    }
+
+    public static Object castGeneric(Object data, Class<?> type, Type genericReturnType) {
+        log.debug("method.getReturnType() = " + type);
+        log.debug("method.getGenericReturnType() = " + genericReturnType);
+        if (data instanceof JSONObject jsonResult) {
+            if (Map.class.isAssignableFrom(type)) {
+                Map resultMap = new HashMap();
+                log.debug(genericReturnType.toString());
+                if (genericReturnType instanceof ParameterizedType parameterizedType) {
+                    Class<?> keyType = (Class<?>) parameterizedType.getActualTypeArguments()[0];
+                    Class<?> valueType = (Class<?>) parameterizedType.getActualTypeArguments()[1];
+                    log.debug("keyType  : " + keyType);
+                    log.debug("valueType: " + valueType);
+                    jsonResult.entrySet().stream().forEach(
+                            e -> {
+                                Object key = cast(e.getKey(), keyType);
+                                Object value = cast(e.getValue(), valueType);
+                                resultMap.put(key, value);
+                            }
+                    );
                 }
+                return resultMap;
             }
-        }
-
-        if (type == int.class || type == Integer.class) {
-            return Integer.parseInt(origin.toString());
-        } else if (type == long.class || type == Long.class) {
-            return Long.parseLong(origin.toString());
-        } else if (type == float.class || type == Float.class) {
-            return Float.parseFloat(origin.toString());
-        } else if (type == double.class || type == Double.class) {
-            return Double.parseDouble(origin.toString());
-        } else if (type == boolean.class || type == Boolean.class) {
-            return Boolean.parseBoolean(origin.toString());
-        } else if (type == byte.class || type == Byte.class) {
-            return Byte.parseByte(origin.toString());
-        } else if (type == short.class || type == Short.class) {
-            return Short.parseShort(origin.toString());
-        } else if (type == char.class || type == Character.class) {
-            return origin.toString().charAt(0);
-        } else if (type == String.class) {
-            return origin.toString();
+            return jsonResult.toJavaObject(type);
+        } else if (data instanceof List list) {
+            Object[] array = list.toArray();
+            if (type.isArray()) {
+                Class<?> componentType = type.getComponentType();
+                Object resultArray = Array.newInstance(componentType, array.length);
+                for (int i = 0; i < array.length; i++) {
+                    if (componentType.isPrimitive() || componentType.getPackageName().startsWith("java")) {
+                        Array.set(resultArray, i, array[i]);
+                    } else {
+                        Object castObject = cast(array[i], componentType);
+                        Array.set(resultArray, i, castObject);
+                    }
+                }
+                return resultArray;
+            } else if (List.class.isAssignableFrom(type)) {
+                List<Object> resultList = new ArrayList<>(array.length);
+                log.debug(genericReturnType.toString());
+                if (genericReturnType instanceof ParameterizedType parameterizedType) {
+                    Type actualType = parameterizedType.getActualTypeArguments()[0];
+                    log.debug(actualType.toString());
+                    for (Object o : array) {
+                        resultList.add(cast(o, (Class<?>) actualType));
+                    }
+                } else {
+                    resultList.addAll(Arrays.asList(array));
+                }
+                return resultList;
+            } else {
+                return null;
+            }
         } else {
-            throw new RuntimeException("not support type");
+            return cast(data, type);
         }
-
     }
 }
