@@ -58,7 +58,7 @@ public class ZkRegistryCenter implements RegistryCenter {
         String servicePath = "/" + serviceMeta.toPath();
         try {
             if (client.checkExists().forPath(servicePath) == null) {
-                client.create().withMode(CreateMode.PERSISTENT).forPath(servicePath, "service".getBytes());
+                client.create().withMode(CreateMode.PERSISTENT).forPath(servicePath, serviceMeta.getParamsAsJson().getBytes());
             }
             String instancePath = servicePath + "/" + instance.toZkPath();
             log.info("===>register instance to zk : " + instancePath);
