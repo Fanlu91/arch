@@ -4,14 +4,12 @@ import com.flhai.myrpc.core.api.Router;
 import com.flhai.myrpc.core.meta.InstanceMeta;
 import lombok.Getter;
 import lombok.Setter;
-import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
 
-@Component
 public class GreyRouter implements Router<InstanceMeta> {
     @Getter
     @Setter
