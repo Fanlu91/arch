@@ -2,17 +2,21 @@ package com.flhai.myrpc.core.cluster;
 
 import com.flhai.myrpc.core.api.Router;
 import com.flhai.myrpc.core.meta.InstanceMeta;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-@Data
+
 @Component
 public class GreyRouter implements Router<InstanceMeta> {
+    @Getter
+    @Setter
     private int greyRate;
+
 
     public GreyRouter(int greyRate) {
         this.greyRate = greyRate;
