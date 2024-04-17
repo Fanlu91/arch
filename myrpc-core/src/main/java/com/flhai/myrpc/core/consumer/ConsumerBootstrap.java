@@ -62,7 +62,7 @@ public class ConsumerBootstrap implements ApplicationContextAware, EnvironmentAw
     }
 
     public void startApplication() {
-        log.info("===>startApplication called");
+        log.info("===> startApplication called");
 
         RpcContext rpcContext = new RpcContext();
         rpcContext.setRouter(applicationContext.getBean(Router.class));

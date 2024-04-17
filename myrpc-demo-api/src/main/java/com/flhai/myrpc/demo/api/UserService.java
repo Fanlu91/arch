@@ -38,4 +38,6 @@ public interface UserService {
     String timeoutFind(int timeout);
 
     void setTimeoutPorts(String ports);
+
+    String echoParameter(String key_version);
 }

@@ -1,6 +1,7 @@
 package com.flhai.myrpc.demo.provider;
 
 import com.flhai.myrpc.core.annotation.MyProvider;
+import com.flhai.myrpc.core.api.RpcContext;
 import com.flhai.myrpc.demo.api.User;
 import com.flhai.myrpc.demo.api.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -137,6 +138,13 @@ public class UserServiceImpl implements UserService {
             }
         }
         return port;
+    }
+
+    @Override
+    public String echoParameter(String key) {
+        System.out.println(" ====>> RpcContext.ContextParameters: ");
+        RpcContext.ContextParameters.get().forEach((k, v) -> System.out.println(k + " -> " + v));
+        return RpcContext.getContextParameter(key);
     }
 
 

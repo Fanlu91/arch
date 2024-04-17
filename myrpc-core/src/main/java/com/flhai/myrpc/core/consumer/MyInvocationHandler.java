@@ -59,7 +59,7 @@ public class MyInvocationHandler implements InvocationHandler {
         RpcRequest rpcRequest = new RpcRequest();
         rpcRequest.setService(serviceClass.getCanonicalName());
         rpcRequest.setMethodSign(MethodUtils.methodSign(method));
-        rpcRequest.setParams(args);
+        rpcRequest.setArgs(args);
 
         int retry = Integer.parseInt(rpcContext.getParameters().getOrDefault("retries", "1"));
         while (retry-- > 0) {

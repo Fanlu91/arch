@@ -1,5 +1,6 @@
 package com.flhai.myrpc.core.provider;
 
+import com.flhai.myrpc.core.api.RpcContext;
 import com.flhai.myrpc.core.api.RpcException;
 import com.flhai.myrpc.core.api.RpcRequest;
 import com.flhai.myrpc.core.api.RpcResponse;
@@ -28,20 +29,22 @@ public class ProviderInvoker {
     }
 
     public RpcResponse invokeRequest(RpcRequest request) {
+        if(!request.getParams().isEmpty()) {
+            request.getParams().forEach(RpcContext::setContextParameter);
+        }
+
         String methodSign = request.getMethodSign();
 
         RpcResponse rpcResponse = new RpcResponse();
         // 通过接口名找到对应的实现类, 通过方法签名找到重载中对应的方法
         List<ProviderMeta> providerMetas = skeleton.get(request.getService());
         try {
-            // getMethod 需要参数类型（方法可能重载），这里还没有拿到
-            //  Method method = bean.getClass().getMethod(request.getMethod());
             // Deprecated method
             //  Method method = findMethod(bean, request.getMethodSign(), request.getParams());
             ProviderMeta providerMeta = getProviderMeta(request, methodSign, providerMetas);
             Method method = providerMeta.getMethod();
 
-            Object[] params = processParams(request.getParams(), method.getParameterTypes(), method.getGenericParameterTypes());
+            Object[] params = processParams(request.getArgs(), method.getParameterTypes(), method.getGenericParameterTypes());
 //            log.debug("params length = " + params.length);
 //            log.debug(params[0].getClass().getName());
 //            log.debug(providerMeta.getSignName());
@@ -83,7 +86,6 @@ public class ProviderInvoker {
         Object[] result = new Object[params.length];
         for (int i = 0; i < params.length; i++) {
             result[i] = TypeUtils.castGeneric(params[i], parameterTypes[i], genericParameterTypes[i]);
-//            log.debug("-----param [i] = " + result[i]);
         }
         return result;
     }
