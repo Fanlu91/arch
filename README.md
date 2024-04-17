@@ -1,4 +1,4 @@
-# 新手坑
+# 1 新手坑
 
 ## 1.idea 没有识别注解
 
@@ -161,7 +161,7 @@ Lombok 是一个在编译时用来帮助简化代码的工具，而不是运行�
 
 
 
-# 知识点
+# 2 知识点
 
 ## @PostConstruct 注解
 
@@ -302,11 +302,7 @@ void destroy() {
    
    
 
-## Logback 的默认配置
-
-
-
-# 工具
+# 3 工具
 
 ## wrk
 
@@ -371,7 +367,7 @@ logging:
     console: "%d{HH:mm:ss} %-5level - %msg%n"
 ```
 
-#### pattern 深入
+#### pattern
 
 上面yaml中，对日志的pattern进行了定制
 
@@ -443,9 +439,25 @@ Log4j2 是较新的技术，其可能拥有更多关于现代日志处理特性�
 
 
 
+## 灰度发布和蓝绿发布
+
+灰度发布（Canary Release）和蓝绿发布（Blue-Green Deployment）都是现代软件开发中用于减少部署风险的技术，但它们的实施方式和目的有所不同。
+
+1. **蓝绿发布**：
+   
+   - 蓝绿发布是通过两套完全相同的生产环境（一套蓝色，一套绿色）来进行的。在一套环境中部署新版本的软件，在另一套环境中运行旧版本。
+   - 当新版本部署并经过足够测试无误后，流量会从旧版本（比如蓝色环境）切换到新版本（绿色环境）。如果新版本出现问题，可以快速回滚到旧版本，只需切换流量即可。
+   - 这种部署方式的优点是切换快速、风险较低，但成本较高，因为需要维护两套几乎相同的生产环境。
+
+2. **灰度发布**：
+   
+   - 灰度发布通常是逐步将新版本引入到生产环境中的一部分用户上，开始时只有小部分用户（比如5%的流量）接触到新版本。
+   - 如果这部分用户的反馈良好，不出现重大问题，会逐渐扩大范围，最终全部用户都会使用新版本。
+   - 灰度发布的优点是风险控制更细致，可以根据用户反馈逐步优化或修正问题，但缺点是可能需要较长时间才能完全部署新版本，且在部署过程中需要处理多版本并存的复杂性。
 
 
-# 问题记录
+
+# 4 问题暂存
 
 [kkrpc-core/src/main/java/cn/kimmking/kkrpc/core/consumer/KKInvocationHandler.java · ArchCamp/kkrpc - Gitee.com](https://gitee.com/ArchCamp/kkrpc/blob/V09/kkrpc-core/src/main/java/cn/kimmking/kkrpc/core/consumer/KKInvocationHandler.java)
 

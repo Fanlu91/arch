@@ -1,5 +1,6 @@
 package com.flhai.myrpc.core.registry.zk;
 
+import com.alibaba.fastjson.JSON;
 import com.flhai.myrpc.core.api.RegistryCenter;
 import com.flhai.myrpc.core.api.RpcException;
 import com.flhai.myrpc.core.meta.InstanceMeta;
@@ -14,10 +15,10 @@ import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.framework.recipes.cache.TreeCache;
 import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.apache.zookeeper.CreateMode;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Value;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -59,9 +60,9 @@ public class ZkRegistryCenter implements RegistryCenter {
             if (client.checkExists().forPath(servicePath) == null) {
                 client.create().withMode(CreateMode.PERSISTENT).forPath(servicePath, "service".getBytes());
             }
-            String instancePath = servicePath + "/" + instance;
+            String instancePath = servicePath + "/" + instance.toZkPath();
             log.info("===>register instance to zk : " + instancePath);
-            client.create().withMode(CreateMode.EPHEMERAL).forPath(instancePath, "provider".getBytes());
+            client.create().withMode(CreateMode.EPHEMERAL).forPath(instancePath, instance.getParamsAsJson().getBytes());
         } catch (Exception e) {
             throw new RpcException(e);
         }
@@ -76,8 +77,7 @@ public class ZkRegistryCenter implements RegistryCenter {
             if (client.checkExists().forPath(servicePath) == null) {
                 return;
             }
-
-            String instancePath = servicePath + "/" + instance;
+            String instancePath = servicePath + "/" + instance.toZkPath();
             client.delete().quietly().forPath(instancePath);
         } catch (Exception e) {
             throw new RpcException(e);
@@ -88,23 +88,38 @@ public class ZkRegistryCenter implements RegistryCenter {
     public List<InstanceMeta> fetchAll(ServiceMeta serviceMeta) {
         log.info("---fetch all service from zk : " + serviceMeta.toPath());
         String servicePath = "/" + serviceMeta.toPath();
-        try {
-            List<String> nodes = client.getChildren().forPath(servicePath);
-            // node = "InstanceMeta(schema=http, host=127.0.0.1, port=8080, context=null, isOnline=false, params=null)"
-            List<InstanceMeta> instanceMetaList = mapInstanceMeta(nodes);
-            return instanceMetaList;
-        } catch (Exception e) {
-            throw new RpcException(e);
-        }
+        List<InstanceMeta> instanceMetaList = mapInstanceMeta(servicePath);
+        return instanceMetaList;
+
     }
 
-    @NotNull
-    private static List<InstanceMeta> mapInstanceMeta(List<String> nodes) {
-        return nodes.stream().map(node -> {
-            String[] parts = node.split(",");
-            String host = parts[1].split("=")[1];
-            int port = Integer.parseInt(parts[2].split("=")[1]);
-            return new InstanceMeta(host, port);
+    /**
+     * node = InstanceMeta(schema=http, host=127.0.0.1, port=8080, context=, isOnline=true, params={unit=unit1, grey=false, dc=dc1})
+     * 目前纯解析字符串，可通过client.getData().forPath(path)获取节点JSON数据提高扩展性
+     *
+     * @return
+     */
+    private List<InstanceMeta> mapInstanceMeta(String servicePath) {
+        List<String> nodes = null;
+        try {
+            nodes = client.getChildren().forPath(servicePath);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        log.debug("instance nodes : " + nodes);
+        return nodes.stream().map(nodePath -> {
+            String[] paths = nodePath.split(":");
+            InstanceMeta instanceMeta = new InstanceMeta(paths[0], Integer.valueOf(paths[1]));
+            byte[] bytes;
+            try {
+                bytes = client.getData().forPath(servicePath + "/" + nodePath);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+            Map params = JSON.parseObject(new String(bytes), Map.class);
+//            params.forEach((k, v) -> System.out.println(k + " : " + v));
+            instanceMeta.setParams(params);
+            return instanceMeta;
         }).collect(Collectors.toList());
     }
 

@@ -43,6 +43,8 @@ public class ProviderBootstrap implements ApplicationContextAware {
     @Value("${app.env}")
     private String env;
 
+    @Value("#{${app.metas}}") //SpEL表达式
+    Map<String, String> metas;
 
     // 据说可以省略
     @Override
@@ -66,6 +68,7 @@ public class ProviderBootstrap implements ApplicationContextAware {
         registryCenter.start();
         instance = new InstanceMeta(InetAddress.getLocalHost().getHostAddress(), Integer.parseInt(port));
 //        instance = InetAddress.getLocalHost().getHostAddress() + "_" + port;
+        instance.getParams().putAll(metas);
         skeleton.keySet().forEach(this::registerProvider);
     }
 

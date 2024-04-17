@@ -1,8 +1,10 @@
 package com.flhai.myrpc.core.meta;
 
+import com.alibaba.fastjson.JSON;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -15,7 +17,6 @@ public class InstanceMeta {
     private String host;
     private int port;
     private String context;
-
     private boolean isOnline;
     private Map<String, String> params;
 
@@ -25,15 +26,33 @@ public class InstanceMeta {
         this.port = port;
         this.context = context;
         this.isOnline = isOnline;
+        this.params = new HashMap<>();
     }
 
+    /**
+     * http instance
+     *
+     * @param host
+     * @param port
+     */
     public InstanceMeta(String host, int port) {
         this.host = host;
         this.port = port;
         this.schema = "http";
+        this.context = "";
+        this.isOnline = true;
+        this.params = new HashMap<>();
     }
 
     public String toUrl() {
         return String.format("%s://%s:%d", schema, host, port);
+    }
+
+    public String toZkPath() {
+        return String.format("%s:%d", host, port);
+    }
+
+    public String getParamsAsJson() {
+        return JSON.toJSONString(this.getParams());
     }
 }

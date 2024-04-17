@@ -4,9 +4,12 @@ app:
   id: app1
   namespace: public
   env: dev
+  metas: "{grey: 'false', dc: 'dc1', unit: 'unit1'}"
+
 myrpc:
   zkServers: localhost:2181
   zkNamespace: myrpc
+
 logging:
   level:
     root: INFO
