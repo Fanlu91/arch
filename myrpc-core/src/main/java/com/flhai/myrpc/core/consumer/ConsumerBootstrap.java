@@ -48,6 +48,7 @@ public class ConsumerBootstrap implements ApplicationContextAware, EnvironmentAw
 
     @Value("${app.timeout.default}")
     private int timeout;
+
     private Map<String, Object> stub = new HashMap<>();
 
     @Override
@@ -69,6 +70,7 @@ public class ConsumerBootstrap implements ApplicationContextAware, EnvironmentAw
         rpcContext.setFilters(applicationContext.getBeansOfType(Filter.class).values().stream().toList());
         rpcContext.getParameters().put("retries", String.valueOf(retries));
         rpcContext.getParameters().put("timeout", String.valueOf(timeout));
+
         RegistryCenter registryCenter = applicationContext.getBean(RegistryCenter.class);
 
         String[] beanDefinitionNames = applicationContext.getBeanDefinitionNames();

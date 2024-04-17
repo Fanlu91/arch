@@ -117,7 +117,7 @@ public class ZkRegistryCenter implements RegistryCenter {
                 throw new RuntimeException(e);
             }
             Map params = JSON.parseObject(new String(bytes), Map.class);
-//            params.forEach((k, v) -> System.out.println(k + " : " + v));
+            params.forEach((k, v) -> System.out.println(k + " --> " + v));
             instanceMeta.setParams(params);
             return instanceMeta;
         }).collect(Collectors.toList());

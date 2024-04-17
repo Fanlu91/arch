@@ -15,6 +15,7 @@ app:
     connect: 3000
     read: 3000
     write: 3000
+  greyRate: 10 # 10%
 logging:
   level:
     root: INFO

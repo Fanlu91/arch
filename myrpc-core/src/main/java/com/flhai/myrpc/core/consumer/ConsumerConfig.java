@@ -3,6 +3,7 @@ package com.flhai.myrpc.core.consumer;
 import com.flhai.myrpc.core.api.LoadBalancer;
 import com.flhai.myrpc.core.api.RegistryCenter;
 import com.flhai.myrpc.core.api.Router;
+import com.flhai.myrpc.core.cluster.GreyRouter;
 import com.flhai.myrpc.core.cluster.RoundRibonLoadBalancer;
 import com.flhai.myrpc.core.registry.zk.ZkRegistryCenter;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +18,9 @@ public class ConsumerConfig {
 
     @Value("${myrpc.providers}")
     String services;
+
+    @Value("${app.greyRate}")
+    int greyRate;
 
     @Bean
     public ConsumerBootstrap consumerBootstrap() {
@@ -40,7 +44,7 @@ public class ConsumerConfig {
 
     @Bean
     public Router router() {
-        return Router.Default;
+        return new GreyRouter(greyRate);
     }
 
     @Bean(initMethod = "start", destroyMethod = "stop")
@@ -58,4 +62,6 @@ public class ConsumerConfig {
 //    public Filter filter2() {
 //        return new MockFilter();
 //    }
+
+
 }

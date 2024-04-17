@@ -21,7 +21,7 @@ public class UserServiceImpl implements UserService {
     // 通过端口号区分不同的服务提供者
     @Override
     public User findById(int id) {
-        return new User(id, "my-"
+        return new User(id, "version-1_"
                 + environment.getProperty("server.port")
                 + "_" + System.currentTimeMillis());
     }
@@ -117,7 +117,7 @@ public class UserServiceImpl implements UserService {
     public void setTimeoutPorts(String ports) {
         this.timeoutPorts = ports;
     }
-
+    
     @Override
     public String timeoutFind(int timeout) {
         String port = environment.getProperty("server.port");

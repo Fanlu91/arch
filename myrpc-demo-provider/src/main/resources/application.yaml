@@ -4,7 +4,7 @@ app:
   id: app1
   namespace: public
   env: dev
-  metas: "{grey: 'false', dc: 'dc1', unit: 'unit1'}"
+  metas: "{grey: 'false', dc: 'dc0', unit: 'unit0'}"
 
 myrpc:
   zkServers: localhost:2181

@@ -1,10 +1,13 @@
 package com.flhai.myrpc.demo.consumer;
 
 import com.flhai.myrpc.core.annotation.MyConsumer;
+import com.flhai.myrpc.core.api.Router;
+import com.flhai.myrpc.core.cluster.GreyRouter;
 import com.flhai.myrpc.core.consumer.ConsumerConfig;
 import com.flhai.myrpc.demo.api.User;
 import com.flhai.myrpc.demo.api.UserService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -43,6 +46,7 @@ public class MyrpcDemoConsumerApplication {
 
     /**
      * http://localhost:9088/timeout?t=800
+     *
      * @param t
      * @return
      */
@@ -57,6 +61,7 @@ public class MyrpcDemoConsumerApplication {
      * todo 这里指改变了1个服务提供者的超时时间，可能真正想改的那个没有被改到
      * http://localhost:9088/timeoutPorts?ports=8081,8094
      * 修改模拟超时端口
+     *
      * @param ports
      * @return
      */
@@ -64,6 +69,20 @@ public class MyrpcDemoConsumerApplication {
     public String testTimeoutPorts(@RequestParam("ports") String ports) {
         userService.setTimeoutPorts(ports);
         return "timeoutPorts: " + ports;
+    }
+
+    @Autowired
+    Router greyRouter;
+
+    /**
+     * http://localhost:9088/grey?rate=50
+     * @param rate
+     * @return
+     */
+    @RequestMapping("/grey")
+    public String testGrey(@RequestParam("rate") int rate) {
+        ((GreyRouter) greyRouter).setGreyRate(rate);
+        return "grey rate: " + rate;
     }
 
     public static void main(String[] args) {
