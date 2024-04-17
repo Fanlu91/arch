@@ -92,6 +92,11 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Map<String, User> getMap(Map<String, User> userMap) {
+        userMap.values().forEach(x -> System.out.println(x.getClass()));
+        User[] users = userMap.values().toArray(new User[userMap.size()]);
+        System.out.println(" ==> userMap.values().toArray()[] = ");
+        Arrays.stream(users).forEach(System.out::println);
+        userMap.put("A2024", new User(2024, "KK2024"));
         return userMap;
     }
 
@@ -117,7 +122,7 @@ public class UserServiceImpl implements UserService {
     public void setTimeoutPorts(String ports) {
         this.timeoutPorts = ports;
     }
-    
+
     @Override
     public String timeoutFind(int timeout) {
         String port = environment.getProperty("server.port");
