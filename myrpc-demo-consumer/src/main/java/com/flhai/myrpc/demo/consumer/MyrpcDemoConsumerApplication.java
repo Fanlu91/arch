@@ -77,6 +77,7 @@ public class MyrpcDemoConsumerApplication {
 
     /**
      * http://localhost:9088/grey?rate=50
+     *
      * @param rate
      * @return
      */
@@ -132,7 +133,7 @@ public class MyrpcDemoConsumerApplication {
         // 测试参数是User类型
         System.out.println("Case 8. >>===[测试参数是User类型]===");
         System.out.println("userService.getId(new User(100,\"KK\")) = " +
-                userService.getId(new User(100,"KK")));
+                userService.getId(new User(100, "KK")));
 
 
         System.out.println("Case 9. >>===[测试返回long[]]===");
@@ -143,7 +144,7 @@ public class MyrpcDemoConsumerApplication {
 
         System.out.println("Case 10. >>===[测试参数和返回值都是long[]]===");
         System.out.println(" ===> userService.getLongIds(): ");
-        for (long id : userService.getIds(new int[]{4,5,6})) {
+        for (long id : userService.getIds(new int[]{4, 5, 6})) {
             System.out.println(id);
         }
 
@@ -160,7 +161,7 @@ public class MyrpcDemoConsumerApplication {
         map.put("A200", new User(200, "KK200"));
         map.put("A201", new User(201, "KK201"));
         userService.getMap(map).forEach(
-                (k,v) -> System.out.println(k + " -> " + v)
+                (k, v) -> System.out.println(k + " -> " + v)
         );
 
         System.out.println("Case 13. >>===[测试参数和返回值都是Boolean/boolean类型]===");
@@ -195,17 +196,17 @@ public class MyrpcDemoConsumerApplication {
         userService.timeoutFind(1100);
         userService.timeoutFind(1100);
         System.out.println("userService.find take "
-                + (System.currentTimeMillis()-start) + " ms");
+                + (System.currentTimeMillis() - start) + " ms");
 
         System.out.println("Case 19. >>===[测试通过Context跨消费者和提供者进行传参]===");
         String Key_Version = "rpc.version";
         String Key_Message = "rpc.message";
         RpcContext.setContextParameter(Key_Version, "v8");
-        RpcContext.setContextParameter(Key_Message, "this is a test message");
         String version = userService.echoParameter(Key_Version);
-        String message = userService.echoParameter(Key_Message);
         System.out.println(" ===> echo parameter from c->p->c: " + Key_Version + " -> " + version);
+
+        RpcContext.setContextParameter(Key_Message, "this is a test message");
+        String message = userService.echoParameter(Key_Message);
         System.out.println(" ===> echo parameter from c->p->c: " + Key_Message + " -> " + message);
-        RpcContext.ContextParameters.get().clear();
     }
 }

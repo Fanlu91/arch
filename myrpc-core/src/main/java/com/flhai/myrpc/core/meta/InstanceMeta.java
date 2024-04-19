@@ -39,13 +39,13 @@ public class InstanceMeta {
         this.host = host;
         this.port = port;
         this.schema = "http";
-        this.context = "";
+        this.context = "myrpc";
         this.isOnline = true;
         this.params = new HashMap<>();
     }
 
     public String toUrl() {
-        return String.format("%s://%s:%d", schema, host, port);
+        return String.format("%s://%s:%d/%s", schema, host, port, context);
     }
 
     public String toZkPath() {

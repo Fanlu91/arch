@@ -1,21 +1,11 @@
 package com.flhai.myrpc.demo.provider;
 
-import com.flhai.myrpc.core.api.RpcRequest;
-import com.flhai.myrpc.core.api.RpcResponse;
 import com.flhai.myrpc.core.provider.ProviderConfig;
-import com.flhai.myrpc.core.provider.ProviderInvoker;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
 @SpringBootApplication
-@RestController
 @Import({ProviderConfig.class})
 public class MyrpcDemoProviderApplication {
 
@@ -23,22 +13,9 @@ public class MyrpcDemoProviderApplication {
         SpringApplication.run(MyrpcDemoProviderApplication.class, args);
     }
 
-    @Autowired
-    ProviderInvoker providerInvoker;
-
-    // use http + json to communicate
-    @RequestMapping("/")
-    public RpcResponse invoke(@RequestBody RpcRequest request) {
-        // find the service
-        return providerInvoker.invokeRequest(request);
-    }
-
-
-    @Bean
-    ApplicationRunner runner() {
-        return args -> {
-
-
+//    @Bean
+//    ApplicationRunner runner() {
+//        return args -> {
 //            request.setService("com.flhai.myrpc.demo.api.OrderService");
 //            request.setMethod("findOrderById");
 //            request.setParams(new Object[]{404});
@@ -65,7 +42,7 @@ public class MyrpcDemoProviderApplication {
 //                    new User(102, "KK102"))});
 //            RpcResponse response = invoke(request);
 //            System.out.println("return: " + response.toString());
-        };
-    }
+//        };
+//    }
 }
 

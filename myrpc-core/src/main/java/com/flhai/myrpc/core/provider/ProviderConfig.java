@@ -2,13 +2,16 @@ package com.flhai.myrpc.core.provider;
 
 import com.flhai.myrpc.core.api.RegistryCenter;
 import com.flhai.myrpc.core.registry.zk.ZkRegistryCenter;
+import com.flhai.myrpc.core.transport.SpringBootTransport;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.core.annotation.Order;
 
 @Configuration
+@Import({SpringBootTransport.class})
 public class ProviderConfig {
     @Bean
     ProviderBootstrap providerBootstrap() {
