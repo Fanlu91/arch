@@ -29,6 +29,9 @@ import java.util.Map;
 @Slf4j
 public class MyrpcDemoConsumerApplication {
 
+    // 如果@Autowired，就是本地调用
+    // 如果@MyConsumer，就是远程调用
+    //    @Autowired
     @MyConsumer
     UserService userService;
 
