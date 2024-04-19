@@ -65,7 +65,7 @@ public class ProviderInvoker {
         } catch (Exception e) {
             log.warn("invoke error", e.getMessage());
             rpcResponse.setStatus(false);
-            rpcResponse.setEx(e);
+            rpcResponse.setEx(new RpcException(e.getMessage()));
         }
         return rpcResponse;
     }
