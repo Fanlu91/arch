@@ -1,7 +1,6 @@
 package com.flhai.myrpc.core.consumer.http;
 
 import com.alibaba.fastjson.JSON;
-import com.flhai.myrpc.core.api.RpcException;
 import com.flhai.myrpc.core.api.RpcRequest;
 import com.flhai.myrpc.core.api.RpcResponse;
 import com.flhai.myrpc.core.consumer.HttpInvoker;
@@ -14,7 +13,7 @@ import java.util.concurrent.TimeUnit;
 public class OkHttpInvoker implements HttpInvoker {
     final MediaType JSONTYPE = MediaType.parse("application/json; charset=utf-8");
 
-    private  OkHttpClient okHttpClient;
+    private OkHttpClient okHttpClient;
 
     public OkHttpInvoker(int timeout) {
         okHttpClient = new OkHttpClient.Builder()
@@ -24,6 +23,7 @@ public class OkHttpInvoker implements HttpInvoker {
                 .connectTimeout(timeout, TimeUnit.MILLISECONDS)
                 .build();
     }
+
     @Override
     public RpcResponse<?> post(RpcRequest rpcRequest, String url) {
         String reqJson = JSON.toJSONString(rpcRequest);
@@ -37,9 +37,10 @@ public class OkHttpInvoker implements HttpInvoker {
             log.debug("post responseJson = " + responseJson);
             return JSON.parseObject(responseJson, RpcResponse.class);
         } catch (ClassCastException e) {
-            return new RpcResponse(false, "class cast error", e);
+            log.error("ClassCastException while post: ", e);
+            throw e;
         } catch (Exception e) {
-            throw new RpcException(e);
+            throw new RuntimeException(e);
         }
     }
 }
