@@ -6,7 +6,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
-@SpringBootTest
+@SpringBootTest(classes = MyrpcDemoProviderApplication.class)
 class MyrpcDemoProviderApplicationTests {
     static TestZKServer zkServer = new TestZKServer();
 

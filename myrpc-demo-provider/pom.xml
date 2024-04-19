@@ -5,11 +5,11 @@
     <parent>
         <groupId>com.flhai</groupId>
         <artifactId>myrpc</artifactId>
-        <version>0.0.1-SNAPSHOT</version>
+        <version>${myrpc.version}</version>
 <!--        <relativePath/>-->
     </parent>
     <artifactId>myrpc-demo-provider</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>${myrpc.version}</version>
     <name>myrpc-demo-provider</name>
     <description>myrpc-demo-provider</description>
     <dependencyManagement>
@@ -42,13 +42,13 @@
         <dependency>
             <groupId>com.flhai</groupId>
             <artifactId>myrpc-core</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <version>${myrpc.version}</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>com.flhai</groupId>
             <artifactId>myrpc-demo-api</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <version>${myrpc.version}</version>
             <scope>compile</scope>
         </dependency>
         <dependency>

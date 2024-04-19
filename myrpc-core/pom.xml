@@ -5,11 +5,11 @@
     <parent>
         <groupId>com.flhai</groupId>
         <artifactId>myrpc</artifactId>
-        <version>0.0.1-SNAPSHOT</version>
+        <version>${myrpc.version}</version>
 <!--        <relativePath/>-->
     </parent>
     <artifactId>myrpc-core</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>${myrpc.version}</version>
     <name>myrpc-core</name>
     <description>myrpc-core</description>
     <properties>
