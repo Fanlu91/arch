@@ -353,6 +353,12 @@ ChatGPT:
 要让 `@PostConstruct` 生效，对象需要通过容器进行管理和创建。在 Spring 应用中，这通常通过组件扫描（标记为 `@Component` 或其它派生注解如 `@Service`、`@Repository`）实现，或者通过配置类明确声明 bean。在 Java EE
 应用中，这通常通过标记为 `@Stateless`、`@Singleton` 等 EJB 注解，或者在 CDI（Contexts and Dependency Injection）中使用类似的机制。
 
+
+
+ 限流
+
+
+
 ## 9. Pattern Matching
 
 Pattern matching involves testing whether an object has a particular structure, then extracting data from that object if
@@ -453,6 +459,20 @@ void destroy() {
   - shardingsphere有个影子库，就是为了全链路压测用
 
 - context传递参数，从consumer传递到provider
+
+
+
+## 限流
+
+在provider端，通过time window判断
+
+
+
+更主流的实现方式是通过令牌桶或者漏桶实现：
+
+额外的定时线程控制并发数量：定时给一定数量的token，调用计数扣减，减到没有则等待下一次触发提供token恢复。
+
+
 
 # 3 工具
 
@@ -589,9 +609,7 @@ Log4j2 是较新的技术，其可能拥有更多关于现代日志处理特性�
 
 
 
-## maven Properties in parent definition
-
-
+## flatten-maven-plugin
 
 ```xml
     <parent>
@@ -658,6 +676,8 @@ Log4j2 是较新的技术，其可能拥有更多关于现代日志处理特性�
 
 
 
+
+
 # 4 问题暂存
 
 [kkrpc-core/src/main/java/cn/kimmking/kkrpc/core/consumer/KKInvocationHandler.java · ArchCamp/kkrpc - Gitee.com](https://gitee.com/ArchCamp/kkrpc/blob/V09/kkrpc-core/src/main/java/cn/kimmking/kkrpc/core/consumer/KKInvocationHandler.java)
@@ -676,13 +696,21 @@ Log4j2 是较新的技术，其可能拥有更多关于现代日志处理特性�
 
 
 
+sonatype 主机记录使用@
 
 
-# todo
+
+# Todo
 
 - [ ] `@EnableMyrpc`
 
 - [ ]  config @v13
+
+- [ ] maven central 发布项目
+
+- [ ] traffic control of provider with time winodw； 
+
+- [ ] 针对不同的服务流控，用 map； 把这个map放在redis，就可以多个节点共享（实现秒杀）
 
 
 
@@ -696,10 +724,10 @@ Log4j2 是较新的技术，其可能拥有更多关于现代日志处理特性�
 
 相对独立的编码可以异步去做
 
-| video | length  | t1    | t2    | t3    | t4                                       | t5     | t6  | t7  |
-| ----- | ------- | ----- | ----- | ----- | ---------------------------------------- | ------ | --- | --- |
-| 11    | 1:30:00 | 21:25 | 21:25 | 37:09 | 1:05:11没敲代码 @enablerpc  ; package config | finish |     |     |
-| 12    | 1:41:27 |       |       |       |                                          |        |     |     |
-|       |         |       |       |       |                                          |        |     |     |
-|       |         |       |       |       |                                          |        |     |     |
-|       |         |       |       |       |                                          |        |     |     |
+| video | length  | t1        | t2           | t3                                      | t4                                       | t5     | t6  | t7  |
+| ----- | ------- | --------- | ------------ | --------------------------------------- | ---------------------------------------- | ------ | --- | --- |
+| 11    | 1:30:00 | 21:25     | 21:25        | 37:09                                   | 1:05:11没敲代码 @enablerpc  ; package config | finish |     |     |
+| 12    | 101:27  | 18:49     | 29:39        | 68:06                                   |                                          |        |     |     |
+|       |         | 被临时打断了一会儿 | 认证了flhai.com | 项目发布到maven central插件；gpg; server token; |                                          |        |     |     |
+|       |         |           |              |                                         |                                          |        |     |     |
+|       |         |           |              |                                         |                                          |        |     |     |
