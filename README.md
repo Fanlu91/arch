@@ -1,4 +1,4 @@
-# 1 新手坑
+# 1 基础
 
 ## 1.idea 没有识别注解
 
@@ -159,11 +159,134 @@ Lombok 是一个在编译时用来帮助简化代码的工具，而不是运行�
 <scope>provided</scope>
 ```
 
+## 6. @Import
 
+`@Import` 用于在一个配置类中导入其他配置类或组件。这可以是另一个带有 `@Configuration` 的类，普通的组件类，或者实现了 `ImportSelector` 或 `ImportBeanDefinitionRegistrar` 接口的类。
 
-# 2 知识点
+通常用于组织和管理配置类之间的依赖关系。它主要用于将多个配置类合并到一个主配置类中，使得你可以模块化地管理Spring配置
 
-## @PostConstruct 注解
+**1. 导入配置类** `@Import` 最直接的用途是将一个或多个配置类导入到当前的配置环境中。这意味着被导入的配置类中定义的所有bean都将被注册到Spring容器中。
+
+```java
+@Configuration
+public class DatabaseConfig {
+    @Bean
+    public DataSource dataSource() {
+        return new HikariDataSource();
+    }
+}
+
+@Configuration
+@Import(DatabaseConfig.class)
+public class MainConfig {
+    // 主配置类，自动包含DatabaseConfig类中定义的所有bean
+}
+```
+
+**2. 使用 ImportSelector 接口** `ImportSelector` 是一个接口，通过实现这个接口，你可以控制哪些类被导入。这通常用于条件性地导入配置，基于不同的环境或配置来动态决定哪些配置类应该被激活。
+
+```java
+public class MyImportSelector implements ImportSelector {
+    @Override
+    public String[] selectImports(AnnotationMetadata importingClassMetadata) {
+        // 基于某种条件动态返回需要导入的类的名称
+        return new String[]{"com.example.config.SomeConfig"};
+    }
+}
+
+@Configuration
+@Import(MyImportSelector.class)
+public class ConditionalConfig {
+    // 使用 ImportSelector 动态导入配置
+}
+```
+
+**3. 使用 ImportBeanDefinitionRegistrar 接口** `ImportBeanDefinitionRegistrar` 允许更复杂的注册逻辑。实现此接口的类可以编程方式地向Spring容器中注册bean。这对于需要API调用的复杂注册逻辑非常有用。
+
+```java
+
+```
+
+## 7. @Configuration
+
+在Spring框架中，`@Configuration` 注解用于定义配置类，它标识一个类包含Spring框架应该管理的bean定义。
+
+### 全功能的配置 full-featured configuration class
+
+当你在类上使用 `@Configuration` 注解时，Spring容器会将这个类当作一个**全功能的配置类**对待。这意味着Spring会通过CGLIB增强这个类，确保在一个bean方法内多次调用其他bean方法时，总是返回同一个实例（即**单例**）。
+
+1. **Bean方法的拦截**
+
+在一个使用`@Configuration`标记的类中，每个带有`@Bean`注解的方法在运行时都被Spring CGLIB代理拦截。这意味着每当这些方法被调用时，Spring容器会拦截调用以确保遵守作用域规则（通常是单例模式）。这是通过创建配置类的一个代理实例来实现的，该实例控制对这些方法的访问。
+
+2. **保证单例**
+
+由于方法的拦截，无论`@Bean`注解的方法在配置类内部被调用多少次，Spring都会确保返回同一个实例（如果该bean是单例的）。这对于维持依赖关系和内部一致性非常重要，尤其是在复杂的依赖注入场景中。
+
+```java
+@Configuration
+public class AppConfig {
+    @Bean
+    public MyBean myBean() {
+        return new MyBean(anotherBean());
+    }
+
+    @Bean
+    public AnotherBean anotherBean() {
+        return new AnotherBean();
+    }
+}
+```
+
+在这个例子中，`myBean`依赖于`anotherBean`。由于`AppConfig`被`@Configuration`修饰，无论`anotherBean()`被调用多少次，它总是返回同一个`AnotherBean`实例。如果去掉`@Configuration`，每次`anotherBean()`被调用时，都会创建一个新的`AnotherBean`实例，这可能导致资源浪费和状态一致性问题。
+
+3. **适用场景**
+
+全功能的配置类非常适合需要细致管理bean生命周期和依赖关系的场景。例如，在需要确保某些bean以单例方式存在，或者需要在不同的bean初始化时注入相同依赖的情况下，使用全功能的配置类是理想的选择。
+
+### 不使用的情况
+
+1. **组件扫描**：如果你主要依赖组件扫描（如 `@ComponentScan`）来自动检测并注册bean，可能不需要显式使用 `@Configuration`。在这种情况下，只使用 `@Component`, `@Service`, `@Repository` 等注解来标注组件。
+
+2. **使用 @Component 替代**：有时，可以使用 `@Component` 或其他类似的注解（如 `@Service` 或 `@Repository`）来替代 `@Configuration`。这在你仅需定义少数几个bean，且不需要配置类全功能支持时尤其有用。
+
+3. **@Bean 方法在非 @Configuration 类中**：在非 `@Configuration` 标注的类中定义 `@Bean` 方法也是可能的，但这些方法不会被CGLIB增强，这意味着**每次调用都会返回一个新的实例**。这在某些特定场景下可能是所需的行为。
+
+### 和Import组合使用过
+
+`@Configuration` 和 `@Import` 配合使用来有效地组织和加载配置。
+
+- **确保bean正确加载**：标记一个包含 `@Bean` 方法的类为 `@Configuration` 并使用 `@Import` 导入其他配置类，可以确保Spring容器正确理解和实施这些配置。这对于维护大型或复杂的Spring应用特别重要，因为它确保了配置的一致性和bean的正确实例化。
+  
+  - 当一个类被标记为 `@Configuration`，Spring会对这个类进行特殊处理，确保所有通过 `@Bean` 定义的方法返回的beans都遵循Spring的依赖注入规则，如单例模式。也就是说，无论一个 `@Bean` 方法被调用多少次，它都只会创建一个bean实例（默认情况下是单例）。
+  
+  - 当使用 `@Import` 时，被导入的配置类中定义的所有 `@Bean` 方法也会被处理，前提是这些被导入的类本身也遵循Spring的配置规则（如可能也是 `@Configuration` 类）。
+
+- **组织结构清晰**：通过使用 `@Import`，你可以把相关的配置集中管理，同时保持配置类的职责单一和清晰。例如，你可以有一个主配置类导入数据库配置、安全配置和Web配置等独立的配置类。
+
+假设有一个主配置类和一个数据库配置类，主配置类通过 `@Import` 引入数据库配置类：
+
+```java
+@Configuration
+public class DatabaseConfig {
+    @Bean
+    public DataSource dataSource() {
+        return new HikariDataSource();
+    }
+}
+
+@Configuration
+@Import(DatabaseConfig.class)
+public class MainConfig {
+    // 这里可以包含其他的 @Bean 定义或者更多的 @Import
+}
+```
+
+在这个例子中，`MainConfig` 是一个主配置类，通过 `@Import` 注解将 `DatabaseConfig` 类中定义的bean（如 `dataSource`）引入。这样，当Spring容器加载 `MainConfig` 时，它也会加载并配置 `DatabaseConfig` 中定义的beans，确保整个应用的配置被正确处理。
+
+- `@Import` 注解允许你在一个配置类中导入其他配置类。这是一种模块化的做法，可以将配置分散到多个逻辑单元中，从而使得整个应用的配置更加清晰和易于管理。
+
+## 8. @PostConstruct 注解
 
 Person:
 
@@ -173,10 +296,9 @@ ChatGPT:
 
 - `jakarta.annotation.PostConstruct` 是 Java EE 5
   引入的一个注解，用于在依赖项注入完成之后，但在类的任何方法使用前，执行初始化方法。这个注解最初在 `javax.annotation` 包下，但从
-  Jakarta EE 8 开始，随着 Java EE 转移到了 Eclipse Foundation 并更名为 Jakarta EE，相应地，`PostConstruct`
-  注解也被移到了 `jakarta.annotation` 包下。
+  Jakarta EE 8 开始，随着 Java EE 转移到了 Eclipse Foundation 并更名为 Jakarta EE，相应地，`PostConstruct` 注解也被移到了 `jakarta.annotation` 包下。
 
-### 主要用途
+**主要用途**
 
 1. **资源初始化** ：最常见的用途是进行资源初始化，如启动时加载配置文件、初始化数据库连接池等。这确保了在类的其他方法被调用前，必要的资源已经准备就绪。
 2. **验证配置** ：可以用来验证依赖注入是否正确，例如检查是否所有必要的服务都已被注入，或者检查配置参数是否有效。
@@ -185,7 +307,7 @@ ChatGPT:
 5. **跨平台的一致性** ：随着 `PostConstruct` 注解的引入，Java EE 提供了一种标准化的方法来处理在构造对象后立即需要执行的初始化代码，提高了不同
    Java EE 应用之间的一致性。
 
-### 使用示例
+**使用示例**
 
 ```java
 import jakarta.annotation.PostConstruct;
@@ -205,8 +327,7 @@ public class StartupBean {
 }
 ```
 
-在上面的示例中，`StartupBean` 类使用了 `@Singleton` 和 `@Startup` 注解，这意味着它会在应用启动时被创建。`@PostConstruct`
-注解的 `init` 方法会在类的实例化及依赖注入完成后自动调用，这里可以放置初始化代码。
+在上面的示例中，`StartupBean` 类使用了 `@Singleton` 和 `@Startup` 注解，这意味着它会在应用启动时被创建。`@PostConstruct` 注解的 `init` 方法会在类的实例化及依赖注入完成后自动调用，这里可以放置初始化代码。
 
 Person:
 
@@ -224,17 +345,15 @@ ChatGPT:
 如果你直接使用 `new` 关键字创建一个对象的实例，依赖注入容器（如 Spring 容器或 Java EE 容器）并不会介入这个过程。这意味着：
 
 - 依赖注入不会发生。容器不会自动注入属性或者调用任何标记为注入点的构造函数、方法。
-- `@PostConstruct` 注解的方法不会被自动调用。因为容器不管理通过 `new`
-  关键字创建的对象，所以它也就不会处理 `@PostConstruct` 注解。
+- `@PostConstruct` 注解的方法不会被自动调用。因为容器不管理通过 `new` 关键字创建的对象，所以它也就不会处理 `@PostConstruct` 注解。
 
 简而言之，如果你直接使用 `new` 创建对象实例，`@PostConstruct` 和其他依赖注入相关的注解（如 `@Autowired` 在 Spring
 中）不会生效。这些特性需要容器的支持才能工作，而通过 `new` 创建的对象实例不由容器管理。
 
-要让 `@PostConstruct` 生效，对象需要通过容器进行管理和创建。在 Spring 应用中，这通常通过组件扫描（标记为 `@Component`
-或其它派生注解如 `@Service`、`@Repository`）实现，或者通过配置类明确声明 bean。在 Java EE
+要让 `@PostConstruct` 生效，对象需要通过容器进行管理和创建。在 Spring 应用中，这通常通过组件扫描（标记为 `@Component` 或其它派生注解如 `@Service`、`@Repository`）实现，或者通过配置类明确声明 bean。在 Java EE
 应用中，这通常通过标记为 `@Stateless`、`@Singleton` 等 EJB 注解，或者在 CDI（Contexts and Dependency Injection）中使用类似的机制。
 
-## Pattern Matching
+## 9. Pattern Matching
 
 Pattern matching involves testing whether an object has a particular structure, then extracting data from that object if
 there's a match.
@@ -253,12 +372,17 @@ if(rpcResponse.isStatus()){
 ```
 
 data instanceof JSONObject jsonResult 和 data instanceof JSONArray jsonArray 检查data对象是否是特定类型（JSONObject 或
-JSONArray），
-**并且如果是**，就将该对象自动转换为相应的类型变量（jsonResult 或 jsonArray）。这种自动转换是Java 14引入的模式匹配（Pattern
+JSONArray）， **并且如果是**，就将该对象自动转换为相应的类型变量（jsonResult 或 jsonArray）。这种自动转换是Java 14引入的模式匹配（Pattern
 Matching）for instanceof的特性的一个例子，它简化了代码并减少了需要进行显式类型转换的地方。
 所以注释中的 1 和 2 两块代码并非等价，前者处理的是JSONObject类型的数据，后者处理的是JSONArray类型的数据。
 
-- https://docs.oracle.com/en/java/javase/17/language/pattern-matching.html
+- [Pattern Matching](https://docs.oracle.com/en/java/javase/17/language/pattern-matching.html)
+
+
+
+
+
+# 2 知识点
 
 ## router 和 loadbalance 在选址上的区别
 
@@ -286,8 +410,6 @@ void destroy() {
   - **`context`**：这是你想要关闭的 `ConfigurableApplicationContext` 对象，即 Spring 应用的上下文。
   - **`() -> 0`**：这是一个 Java Lambda 表达式，它实现了 `org.springframework.boot.ExitCodeGenerator` 接口。这个接口用于在应用退出时提供一个退出代码。在这个例子中，它总是返回 `0`，通常表示程序正常退出。
 
-
-
 ## provider节点故障处理
 
 1. 有节点宕机时，通过多个provider集群+注册中心，可以保障整体的可用
@@ -299,8 +421,38 @@ void destroy() {
    - 通过探活再做故障恢复，full open
    
    - 每次定时探活，放一部分流量，half open
+
+## 灰度发布和蓝绿发布
+
+灰度发布（Canary Release）和蓝绿发布（Blue-Green Deployment）都是现代软件开发中用于减少部署风险的技术，但它们的实施方式和目的有所不同。
+
+1. **蓝绿发布**：
    
+   - 蓝绿发布是通过两套完全相同的生产环境（一套蓝色，一套绿色）来进行的。在一套环境中部署新版本的软件，在另一套环境中运行旧版本。
+   - 当新版本部署并经过足够测试无误后，流量会从旧版本（比如蓝色环境）切换到新版本（绿色环境）。如果新版本出现问题，可以快速回滚到旧版本，只需切换流量即可。
+   - 这种部署方式的优点是切换快速、风险较低，但成本较高，因为需要维护两套几乎相同的生产环境。
+
+2. **灰度发布**：
    
+   - 灰度发布通常是逐步将新版本引入到生产环境中的一部分用户上，开始时只有小部分用户（比如5%的流量）接触到新版本。
+   - 如果这部分用户的反馈良好，不出现重大问题，会逐渐扩大范围，最终全部用户都会使用新版本。
+   - 灰度发布的优点是风险控制更细致，可以根据用户反馈逐步优化或修正问题，但缺点是可能需要较长时间才能完全部署新版本，且在部署过程中需要处理多版本并存的复杂性。
+
+### 不同的灰度
+
+单个服务的灰度发布使用流量染色+调拨
+
+- 更成熟的做法是灰度用户，染色==调用的用户
+
+- 或者灰度调用，染色==当前的这次访问
+
+全链路灰度，全链路压测，也靠的是流量染色
+
+- 中间件，数据库都需要灰度
+  
+  - shardingsphere有个影子库，就是为了全链路压测用
+
+- context传递参数，从consumer传递到provider
 
 # 3 工具
 
@@ -334,8 +486,6 @@ dashboard
 sc com.flhai.myrpc.*
 trace com.flhai.myrpc.core.consumer.MyInvocationHandler invoke
 ```
-
-
 
 ## springboot log
 
@@ -434,26 +584,77 @@ Log4j2 是较新的技术，其可能拥有更多关于现代日志处理特性�
 <dependency>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-log4j2</artifactId>
-</dependency>
+</dependency> 
 ```
 
 
 
-## 灰度发布和蓝绿发布
+## maven Properties in parent definition
 
-灰度发布（Canary Release）和蓝绿发布（Blue-Green Deployment）都是现代软件开发中用于减少部署风险的技术，但它们的实施方式和目的有所不同。
 
-1. **蓝绿发布**：
-   
-   - 蓝绿发布是通过两套完全相同的生产环境（一套蓝色，一套绿色）来进行的。在一套环境中部署新版本的软件，在另一套环境中运行旧版本。
-   - 当新版本部署并经过足够测试无误后，流量会从旧版本（比如蓝色环境）切换到新版本（绿色环境）。如果新版本出现问题，可以快速回滚到旧版本，只需切换流量即可。
-   - 这种部署方式的优点是切换快速、风险较低，但成本较高，因为需要维护两套几乎相同的生产环境。
 
-2. **灰度发布**：
-   
-   - 灰度发布通常是逐步将新版本引入到生产环境中的一部分用户上，开始时只有小部分用户（比如5%的流量）接触到新版本。
-   - 如果这部分用户的反馈良好，不出现重大问题，会逐渐扩大范围，最终全部用户都会使用新版本。
-   - 灰度发布的优点是风险控制更细致，可以根据用户反馈逐步优化或修正问题，但缺点是可能需要较长时间才能完全部署新版本，且在部署过程中需要处理多版本并存的复杂性。
+```xml
+    <parent>
+        <groupId>com.flhai</groupId>
+        <artifactId>myrpc</artifactId>
+        <version>${myrpc.version}</version>
+    </parent>
+```
+
+在 parent定义版本，然后在所有出现版本的地方使用变量Properties in parent definition are prohibited ，实际引用时也可能存在问题，比如引入子项目时获取不到变量值。
+
+针对引入时的问题，一种解决办法是项目启动时定义变量，如比如指定`myrpc.version`。另外一种办法是引入 flatten-maven-plugin，放在根pom的build中
+
+```xml
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>flatten-maven-plugin</artifactId>
+                <version>1.5.0</version>
+                <configuration>
+                    <updatePomFile>true</updatePomFile>
+                    <flattenMode>oss</flattenMode>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>flatten</id>
+                        <goals>
+                            <goal>flatten</goal>
+                        </goals>
+                        <phase>process-resources</phase>
+                    </execution>
+                    <execution>
+                        <id>flatten.clean</id>
+                        <goals>
+                            <goal>clean</goal>
+                        </goals>
+                        <phase>clean</phase>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+```
+
+这时，install的效果会发生变化
+
+```xml
+[INFO] --- maven-jar-plugin:2.4:jar (default-jar) @ myrpc-demo-consumer ---
+[INFO] Building jar: /Users/fanlu/workspace/java/myrpc/myrpc-demo-consumer/target/myrpc-demo-consumer-0.0.3-SNAPSHOT.jar
+[INFO] 
+[INFO] --- spring-boot-maven-plugin:3.2.4:repackage (default) @ myrpc-demo-consumer ---
+[INFO] Replacing main artifact /Users/fanlu/workspace/java/myrpc/myrpc-demo-consumer/target/myrpc-demo-consumer-0.0.3-SNAPSHOT.jar with repackaged archive, adding nested dependencies in BOOT-INF/.
+[INFO] The original artifact has been renamed to /Users/fanlu/workspace/java/myrpc/myrpc-demo-consumer/target/myrpc-demo-consumer-0.0.3-SNAPSHOT.jar.original
+[INFO] 
+[INFO] --- maven-install-plugin:2.4:install (default-install) @ myrpc-demo-consumer ---
+[INFO] Installing /Users/fanlu/workspace/java/myrpc/myrpc-demo-consumer/target/myrpc-demo-consumer-0.0.3-SNAPSHOT.jar to /Users/fanlu/.m2/repository/com/flhai/myrpc-demo-consumer/0.0.3-SNAPSHOT/myrpc-demo-consumer-0.0.3-SNAPSHOT.jar
+[INFO] Installing /Users/fanlu/workspace/java/myrpc/myrpc-demo-consumer/.flattened-pom.xml to /Users/fanlu/.m2/repository/com/flhai/myrpc-demo-consumer/0.0.3-SNAPSHOT/myrpc-demo-consumer-0.0.3-SNAPSHOT.pom
+```
+
+重点是会使用一个单独的  .flattened-pom.xml。
+
+这个插件将树状的引用结构打平，变量也都被替换成了真实值。
 
 
 
@@ -471,4 +672,34 @@ Log4j2 是较新的技术，其可能拥有更多关于现代日志处理特性�
                 }
 ```
 
-这里第一次隔离之后就又恢复了。没有起效呀
+这里第一次隔离之后就又恢复了。没有起效
+
+
+
+
+
+# todo
+
+- [ ] `@EnableMyrpc`
+
+- [ ]  config @v13
+
+
+
+
+
+# TimeTable
+
+保证完全理解的前提下
+
+以尽量快的速度完成
+
+相对独立的编码可以异步去做
+
+| video | length  | t1    | t2    | t3    | t4                                       | t5     | t6  | t7  |
+| ----- | ------- | ----- | ----- | ----- | ---------------------------------------- | ------ | --- | --- |
+| 11    | 1:30:00 | 21:25 | 21:25 | 37:09 | 1:05:11没敲代码 @enablerpc  ; package config | finish |     |     |
+| 12    | 1:41:27 |       |       |       |                                          |        |     |     |
+|       |         |       |       |       |                                          |        |     |     |
+|       |         |       |       |       |                                          |        |     |     |
+|       |         |       |       |       |                                          |        |     |     |
