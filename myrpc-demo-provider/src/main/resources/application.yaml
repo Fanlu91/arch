@@ -13,6 +13,8 @@ myrpc:
       grey: false
       dc: dc0
       unit: unit0
+      refillInterval: 30000
+      maxToken: 3
 logging:
   level:
     root: INFO

@@ -4,11 +4,13 @@ import com.flhai.myrpc.core.api.RpcContext;
 import com.flhai.myrpc.core.api.RpcException;
 import com.flhai.myrpc.core.api.RpcRequest;
 import com.flhai.myrpc.core.api.RpcResponse;
+import com.flhai.myrpc.core.config.ProviderProperties;
 import com.flhai.myrpc.core.meta.ProviderMeta;
 import com.flhai.myrpc.core.util.MethodUtils;
 import com.flhai.myrpc.core.util.TypeUtils;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.MultiValueMap;
 
 import java.lang.reflect.InvocationTargetException;
@@ -23,17 +25,29 @@ import java.util.List;
 @Slf4j
 public class ProviderInvoker {
     private MultiValueMap<String, ProviderMeta> skeleton;
+    private ProviderProperties providerProperties;
+    @Autowired
+    private TokenBucketLimiter tokenBucketLimiter;
 
     public ProviderInvoker(ProviderBootstrap bootstrap) {
         this.skeleton = bootstrap.getSkeleton();
+        this.providerProperties = bootstrap.getProviderProperties();
     }
 
     public RpcResponse invokeRequest(RpcRequest request) {
-        if(!request.getParams().isEmpty()) {
+        if (!request.getParams().isEmpty()) {
             request.getParams().forEach(RpcContext::setContextParameter);
         }
-
         String methodSign = request.getMethodSign();
+        // use token bucket to limit the rate of invoking
+        if (!tokenBucketLimiter.tryAcquire(methodSign)) {
+            log.warn(methodSign + "exceed the rate limit");
+            RpcResponse rpcResponse = new RpcResponse();
+            rpcResponse.setStatus(false);
+            rpcResponse.setEx(new RpcException("exceed the rate limit"));
+            rpcResponse.setData("exceed the rate limit");
+            return rpcResponse;
+        }
 
         RpcResponse rpcResponse = new RpcResponse();
         // 通过接口名找到对应的实现类, 通过方法签名找到重载中对应的方法

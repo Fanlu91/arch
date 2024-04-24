@@ -3,8 +3,10 @@ package com.flhai.myrpc.core.config;
 import com.flhai.myrpc.core.api.RegistryCenter;
 import com.flhai.myrpc.core.provider.ProviderBootstrap;
 import com.flhai.myrpc.core.provider.ProviderInvoker;
+import com.flhai.myrpc.core.provider.TokenBucketLimiter;
 import com.flhai.myrpc.core.registry.zk.ZkRegistryCenter;
 import com.flhai.myrpc.core.transport.SpringBootTransport;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationRunner;
@@ -13,6 +15,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.annotation.Order;
 
+@Slf4j
 @Configuration
 @Import({SpringBootTransport.class, ProviderProperties.class, AppProperties.class})
 public class ProviderConfig {
@@ -42,5 +45,19 @@ public class ProviderConfig {
         return args -> {
             providerBootstrap.start();
         };
+    }
+
+    /**
+     * 令牌桶限流
+     *
+     * @param pp
+     * @return
+     */
+    @Bean
+    public TokenBucketLimiter tokenBucketLimiter(@Autowired ProviderProperties pp) {
+        int refillInterval = Integer.parseInt(pp.getMetas().getOrDefault("refillInterval", "10000"));
+        int maxTokens = Integer.parseInt(pp.getMetas().getOrDefault("maxToken", "10"));
+        log.info("refillInterval:{}, maxTokens:{}", refillInterval, maxTokens);
+        return new TokenBucketLimiter(refillInterval, maxTokens);
     }
 }

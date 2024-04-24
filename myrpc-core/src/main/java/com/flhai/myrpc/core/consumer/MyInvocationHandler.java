@@ -89,6 +89,10 @@ public class MyInvocationHandler implements InvocationHandler {
                         log.debug("===> try half open instance: " + instance);
                     }
                 }
+                if (instance == null) {
+                    log.error("===> no available instance");
+                    throw new RpcException("no available instance");
+                }
                 String url = instance.toUrl();
                 log.debug("===> choose url = " + url);
 
