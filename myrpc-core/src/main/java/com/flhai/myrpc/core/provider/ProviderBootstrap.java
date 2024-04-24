@@ -2,6 +2,8 @@ package com.flhai.myrpc.core.provider;
 
 import com.flhai.myrpc.core.annotation.MyProvider;
 import com.flhai.myrpc.core.api.RegistryCenter;
+import com.flhai.myrpc.core.config.AppProperties;
+import com.flhai.myrpc.core.config.ProviderProperties;
 import com.flhai.myrpc.core.meta.InstanceMeta;
 import com.flhai.myrpc.core.meta.ProviderMeta;
 import com.flhai.myrpc.core.meta.ServiceMeta;
@@ -12,7 +14,6 @@ import lombok.Data;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.util.LinkedMultiValueMap;
@@ -27,24 +28,21 @@ import java.util.Map;
 @Slf4j
 public class ProviderBootstrap implements ApplicationContextAware {
     ApplicationContext applicationContext;
+    private AppProperties appProperties;
+    private ProviderProperties providerProperties;
 
-    private InstanceMeta instance;
-    RegistryCenter registryCenter;
-    @Value("${server.port}")
     private String port;
+    RegistryCenter registryCenter;
+    private InstanceMeta instance;
+
     private MultiValueMap<String, ProviderMeta> skeleton = new LinkedMultiValueMap<>();
 
-    @Value("${app.id}")
-    private String app;
-
-    @Value("${app.namespace}")
-    private String namespace;
-
-    @Value("${app.env}")
-    private String env;
-
-    @Value("#{${app.metas}}") //SpEL表达式
-    Map<String, String> metas;
+    public ProviderBootstrap(String port, AppProperties appProperties,
+                             ProviderProperties providerProperties) {
+        this.port = port;
+        this.appProperties = appProperties;
+        this.providerProperties = providerProperties;
+    }
 
     // 据说可以省略
     @Override
@@ -58,7 +56,6 @@ public class ProviderBootstrap implements ApplicationContextAware {
         Map<String, Object> providers = applicationContext.getBeansWithAnnotation(MyProvider.class);
         providers.values().forEach(this::genInterfaces);
         registryCenter = applicationContext.getBean(RegistryCenter.class);
-
     }
 
     @SneakyThrows
@@ -67,8 +64,7 @@ public class ProviderBootstrap implements ApplicationContextAware {
     public void start() {
         registryCenter.start();
         instance = new InstanceMeta(InetAddress.getLocalHost().getHostAddress(), Integer.parseInt(port));
-//        instance = InetAddress.getLocalHost().getHostAddress() + "_" + port;
-        instance.getParams().putAll(metas);
+        instance.getParams().putAll(providerProperties.getMetas());
         skeleton.keySet().forEach(this::registerProvider);
     }
 
@@ -82,16 +78,19 @@ public class ProviderBootstrap implements ApplicationContextAware {
     private void registerProvider(String serviceName) {
         ServiceMeta serviceMeta = ServiceMeta
                 .builder()
-                .app(app)
-                .namespace(namespace)
-                .env(env)
+                .app(appProperties.getId())
+                .namespace(appProperties.getNamespace())
+                .env(appProperties.getEnv())
                 .name(serviceName).build();
         registryCenter.register(serviceMeta, instance);
     }
 
     private void unregisterProvider(String serviceName) {
         ServiceMeta serviceMeta = ServiceMeta.builder()
-                .app(app).namespace(namespace).env(env).name(serviceName).build();
+                .app(appProperties.getId())
+                .namespace(appProperties.getNamespace())
+                .env(appProperties.getEnv())
+                .name(serviceName).build();
         registryCenter.unregister(serviceMeta, instance);
     }
 

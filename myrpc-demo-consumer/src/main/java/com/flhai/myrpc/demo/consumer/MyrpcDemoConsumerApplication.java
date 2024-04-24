@@ -4,7 +4,7 @@ import com.flhai.myrpc.core.annotation.MyConsumer;
 import com.flhai.myrpc.core.api.Router;
 import com.flhai.myrpc.core.api.RpcContext;
 import com.flhai.myrpc.core.cluster.GreyRouter;
-import com.flhai.myrpc.core.consumer.ConsumerConfig;
+import com.flhai.myrpc.core.config.ConsumerConfig;
 import com.flhai.myrpc.demo.api.User;
 import com.flhai.myrpc.demo.api.UserService;
 import lombok.extern.slf4j.Slf4j;

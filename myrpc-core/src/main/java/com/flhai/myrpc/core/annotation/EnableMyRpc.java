@@ -1,7 +1,7 @@
 package com.flhai.myrpc.core.annotation;
 
-import com.flhai.myrpc.core.consumer.ConsumerConfig;
-import com.flhai.myrpc.core.provider.ProviderConfig;
+import com.flhai.myrpc.core.config.ConsumerConfig;
+import com.flhai.myrpc.core.config.ProviderConfig;
 import org.springframework.context.annotation.Import;
 
 import java.lang.annotation.*;

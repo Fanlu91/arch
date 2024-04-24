@@ -1,5 +1,6 @@
 package com.flhai.myrpc.core.api;
 
+import com.flhai.myrpc.core.config.ConsumerProperties;
 import com.flhai.myrpc.core.meta.InstanceMeta;
 import lombok.Data;
 
@@ -13,6 +14,7 @@ public class RpcContext {
     Router router;
     List<Filter> filters;
     private Map<String, String> parameters = new HashMap<>();
+    private ConsumerProperties consumerProperties;
 
     /**
      * 线程独立的上下文参数

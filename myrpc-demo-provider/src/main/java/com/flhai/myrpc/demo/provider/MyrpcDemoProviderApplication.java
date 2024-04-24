@@ -1,6 +1,6 @@
 package com.flhai.myrpc.demo.provider;
 
-import com.flhai.myrpc.core.provider.ProviderConfig;
+import com.flhai.myrpc.core.config.ProviderConfig;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Import;

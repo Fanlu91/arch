@@ -27,15 +27,16 @@ public class ZkRegistryCenter implements RegistryCenter {
     private CuratorFramework client = null;
     private TreeCache treeCache = null;
 
-    @Value("${myrpc.zkServers}")
+    @Value("${myrpc.zk.servers:localhost:2181}")
     private String zkServers;
 
-    @Value("${myrpc.zkNamespace}")
+    @Value("${myrpc.zk.namespace:myrpc}")
     private String zkNamespace;
 
     @Override
     public void start() {
         log.info("---start zk registry client");
+
         RetryPolicy retryPolicy = new ExponentialBackoffRetry(1000, 3);
         client = CuratorFrameworkFactory.builder()
                 .connectString(zkServers)

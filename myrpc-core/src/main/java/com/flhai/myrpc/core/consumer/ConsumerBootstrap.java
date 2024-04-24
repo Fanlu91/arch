@@ -1,7 +1,9 @@
 package com.flhai.myrpc.core.consumer;
 
 import com.flhai.myrpc.core.annotation.MyConsumer;
-import com.flhai.myrpc.core.api.*;
+import com.flhai.myrpc.core.api.RegistryCenter;
+import com.flhai.myrpc.core.api.RpcContext;
+import com.flhai.myrpc.core.api.RpcException;
 import com.flhai.myrpc.core.meta.InstanceMeta;
 import com.flhai.myrpc.core.meta.ServiceMeta;
 import com.flhai.myrpc.core.registry.ChangedListener;
@@ -11,7 +13,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.EnvironmentAware;
@@ -34,21 +35,6 @@ public class ConsumerBootstrap implements ApplicationContextAware, EnvironmentAw
     ApplicationContext applicationContext;
     Environment environment;
 
-    @Value("${app.id}")
-    private String app;
-
-    @Value("${app.namespace}")
-    private String namespace;
-
-    @Value("${app.env}")
-    private String env;
-
-    @Value("${app.retry.max}")
-    private int retries;
-
-    @Value("${app.timeout.default}")
-    private int timeout;
-
     private Map<String, Object> stub = new HashMap<>();
 
     @Override
@@ -64,12 +50,12 @@ public class ConsumerBootstrap implements ApplicationContextAware, EnvironmentAw
     public void startApplication() {
         log.info("===> startApplication called");
 
-        RpcContext rpcContext = new RpcContext();
-        rpcContext.setRouter(applicationContext.getBean(Router.class));
-        rpcContext.setLoadBalancer(applicationContext.getBean(LoadBalancer.class));
-        rpcContext.setFilters(applicationContext.getBeansOfType(Filter.class).values().stream().toList());
-        rpcContext.getParameters().put("retries", String.valueOf(retries));
-        rpcContext.getParameters().put("timeout", String.valueOf(timeout));
+        RpcContext rpcContext = applicationContext.getBean(RpcContext.class);
+//        rpcContext.setRouter(applicationContext.getBean(Router.class));
+//        rpcContext.setLoadBalancer(applicationContext.getBean(LoadBalancer.class));
+//        rpcContext.setFilters(applicationContext.getBeansOfType(Filter.class).values().stream().toList());
+//        rpcContext.getParameters().put("retries", String.valueOf(retries));
+//        rpcContext.getParameters().put("timeout", String.valueOf(timeout));
 
         RegistryCenter registryCenter = applicationContext.getBean(RegistryCenter.class);
 
@@ -105,9 +91,9 @@ public class ConsumerBootstrap implements ApplicationContextAware, EnvironmentAw
         log.info("===> createConsumerFromRegistry called");
         String serviceName = serviceClass.getCanonicalName();
         ServiceMeta serviceMeta = ServiceMeta.builder()
-                .app(app)
-                .namespace(namespace)
-                .env(env)
+                .app(rpcContext.getParameters().get("app.id"))
+                .namespace(rpcContext.getParameters().get("app.namespace"))
+                .env(rpcContext.getParameters().get("app.env"))
                 .name(serviceName)
                 .build();
         List<InstanceMeta> providers = registryCenter.fetchAll(serviceMeta);

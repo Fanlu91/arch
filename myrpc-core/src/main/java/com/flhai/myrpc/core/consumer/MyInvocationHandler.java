@@ -40,11 +40,15 @@ public class MyInvocationHandler implements InvocationHandler {
         this.serviceClass = serviceClass;
         this.rpcContext = rpcContext;
         this.providers = providers;
-        this.httpInvoker = new OkHttpInvoker(Integer.parseInt(rpcContext.getParameters().getOrDefault("timeout", "1000")));
+        int timeout = Integer.parseInt(rpcContext.getParameters().getOrDefault("consumer.timeout", "1000"));
+        this.httpInvoker = new OkHttpInvoker(timeout);
+
         this.isolatedProviders = new CopyOnWriteArrayList<>();
         this.halfOpenProviders = new ArrayList<>();
         this.scheduledExecutorService = Executors.newScheduledThreadPool(1);
-        this.scheduledExecutorService.scheduleWithFixedDelay(this::halfOpen, 0, 30, TimeUnit.SECONDS);
+        int halfOpenInitialDelay = Integer.parseInt(rpcContext.getParameters().getOrDefault("app.halfOpenInitialDelay", "0"));
+        int halfOpenDelay = Integer.parseInt(rpcContext.getParameters().getOrDefault("app.halfOpenDelay", "30"));
+        this.scheduledExecutorService.scheduleWithFixedDelay(this::halfOpen, halfOpenInitialDelay, halfOpenDelay, TimeUnit.SECONDS);
     }
 
     private void halfOpen() {
@@ -61,7 +65,7 @@ public class MyInvocationHandler implements InvocationHandler {
         rpcRequest.setMethodSign(MethodUtils.methodSign(method));
         rpcRequest.setArgs(args);
 
-        int retry = Integer.parseInt(rpcContext.getParameters().getOrDefault("retries", "1"));
+        int retry = Integer.parseInt(rpcContext.getParameters().getOrDefault("consumer.retries", "1"));
         while (retry-- > 0) {
             try {
                 List<Filter> filters = rpcContext.getFilters();
