@@ -9,16 +9,31 @@ myrpc:
     namespace: public
     env: dev
   provider:
+    test: from_yaml
     metas:
       grey: false
       dc: dc0
       unit: unit0
-      refillInterval: 30000
+      refillInterval: 300000
       maxToken: 3
+
 logging:
   level:
     root: INFO
     org.springframework: INFO
     com.flhai: DEBUG
-  pattern:
-    console: "%d{HH:mm:ss} %-5level - %msg%n"
+#  pattern:
+#    console: "%d{HH:mm:ss} %-5level - %msg%n"
+
+app:
+  id: app1
+apollo:
+  cacheDir: /opt/data/                       #配置本地配置缓存目录
+  cluster: default                           #指定使用哪个集群的配置
+  meta: http://localhost:8080                #DEV环境配置中心地址
+  autoUpdateInjectedSpringProperties: true   #是否开启 Spring 参数自动更新
+  bootstrap:
+    enabled: true                            #是否开启 Apollo
+    namespaces: namespace1                     #设置 Namespace
+    eagerLoad:
+      enabled: false                         #将 Apollo 加载提到初始化日志系统之前

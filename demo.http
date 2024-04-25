@@ -39,3 +39,6 @@ Content-Type: application/json
 
 ### get user info
 GET http://localhost:9088/?id=101
+
+### get apollo config test
+GET http://localhost:8081/test

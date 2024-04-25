@@ -1,13 +1,32 @@
 package com.flhai.myrpc.demo.provider;
 
+import com.ctrip.framework.apollo.spring.annotation.EnableApolloConfig;
 import com.flhai.myrpc.core.config.ProviderConfig;
+import com.flhai.myrpc.core.config.ProviderProperties;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Import;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @SpringBootApplication
 @Import({ProviderConfig.class})
+@RestController
+@EnableApolloConfig
 public class MyrpcDemoProviderApplication {
+
+    @Value("${myrpc.provider.test}")
+    String test;
+
+    @Autowired
+    ProviderProperties providerProperties;
+
+    @RequestMapping("/test")
+    public String test() {
+        return "origin: "+ test + " \ncurrent: " + providerProperties.getTest();
+    }
 
     public static void main(String[] args) {
         SpringApplication.run(MyrpcDemoProviderApplication.class, args);

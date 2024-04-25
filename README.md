@@ -353,11 +353,7 @@ ChatGPT:
 要让 `@PostConstruct` 生效，对象需要通过容器进行管理和创建。在 Spring 应用中，这通常通过组件扫描（标记为 `@Component` 或其它派生注解如 `@Service`、`@Repository`）实现，或者通过配置类明确声明 bean。在 Java EE
 应用中，这通常通过标记为 `@Stateless`、`@Singleton` 等 EJB 注解，或者在 CDI（Contexts and Dependency Injection）中使用类似的机制。
 
-
-
  限流
-
-
 
 ## 9. Pattern Matching
 
@@ -383,10 +379,6 @@ Matching）for instanceof的特性的一个例子，它简化了代码并减少�
 所以注释中的 1 和 2 两块代码并非等价，前者处理的是JSONObject类型的数据，后者处理的是JSONArray类型的数据。
 
 - [Pattern Matching](https://docs.oracle.com/en/java/javase/17/language/pattern-matching.html)
-
-
-
-
 
 # 2 知识点
 
@@ -460,19 +452,114 @@ void destroy() {
 
 - context传递参数，从consumer传递到provider
 
-
-
 ## 限流
 
 在provider端，通过time window判断
-
-
 
 更主流的实现方式是通过令牌桶或者漏桶实现：
 
 额外的定时线程控制并发数量：定时给一定数量的token，调用计数扣减，减到没有则等待下一次触发提供token恢复。
 
+# Apollo
 
+## 安装配置 2.2.0版
+
+[Quick Start · apolloconfig/apollo Wiki · GitHub](https://github.com/apolloconfig/apollo/wiki/Quick-Start)
+
+[手动初始化 ApolloConfigDB 和 ApolloPortalDB](https://www.apolloconfig.com/#/zh/deployment/quick-start?id=_241-%e6%89%8b%e5%8a%a8%e5%88%9d%e5%a7%8b%e5%8c%96-apolloconfigdb-%e5%92%8c-apolloportaldb)
+
+```less
+mysql -uroot -p < apolloconfigdb.sql
+mysql -uroot -p < apolloportaldb.sql
+
+mysql -u root -p
+
+CREATE USER 'apollo-user'@'%' IDENTIFIED BY 'Denglu01@';
+GRANT ALL PRIVILEGES ON ApolloConfigDB.* TO 'apollo-user'@'%';
+GRANT ALL PRIVILEGES ON ApolloPortalDB.* TO 'apollo-user'@'%';
+FLUSH PRIVILEGES;
+
+mysql -u apollo-user -p''
+```
+
+编辑 demo.sh 
+
+```bash
+# apollo config db info
+apollo_config_db_url=${APOLLO_CONFIG_DB_URL:-"jdbc:mysql://localhost:3306/ApolloConfigDB?characterEncoding=utf8&serverTimezone=Asia/Shanghai"}
+apollo_config_db_username=${APOLLO_CONFIG_DB_USERNAME:-apollo-user}
+apollo_config_db_password=${APOLLO_CONFIG_DB_PASSWORD:-Denglu01@}
+
+# apollo portal db info
+apollo_portal_db_url=${APOLLO_PORTAL_DB_URL:-"jdbc:mysql://localhost:3306/ApolloPortalDB?characterEncoding=utf8&serverTimezone=Asia/Shanghai"}
+apollo_portal_db_username=${APOLLO_PORTAL_DB_USERNAME:-apollo-user}
+apollo_portal_db_password=${APOLLO_PORTAL_DB_PASSWORD:-Denglu01@}
+```
+
+这里一些老的文档介绍和新版本是不一致的，Apollo本身的报错机制也比较一般，用all in one启动并不报错，也没有记录任何日志，导致花了比较长的时间排错。
+
+## apollo的配置原理
+
+Apollo 的配置项被添加到 Spring 的 `Environment` 中作为一个 `PropertySource`。
+
+- Spring environment  propertySourceList 中有各种各样的source，我们的yaml配置文件等也是一个source
+
+- property加载时类似于类加载，多个 `PropertySource`有一定的优先级顺序，优先级高的会覆盖优先级低的。Apollo的配置高于本地配置，确保对本地配置的覆盖
+
+
+
+
+
+
+
+## Refresh 引入
+
+```java
+
+import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.cloud.autoconfigure.RefreshAutoConfiguration;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
+
+@ConfigurationProperties(prefix = "myrpc.provider")
+@RefreshScope
+@ImportAutoConfiguration(RefreshAutoConfiguration.class)
+public class ProviderProperties {
+```
+
+**@RefreshScope**
+
+`@RefreshScope` 是由 Spring Cloud 提供的一个功能，它用于动态刷新配置。当使用配置中心（如 Apollo, Consul, Spring Cloud Config Server 等）时，`@RefreshScope` 可以确保 Bean 在配置更改时能够被重新初始化，从而使用最新的配置值。这对于运行时配置的动态更新非常有用。
+
+
+
+
+
+**@ImportAutoConfiguration**
+
+`@ImportAutoConfiguration` 是一个 Spring Boot 特有的注解，它用于自动导入一组指定的自动配置类。这个注解主要用在测试环境中，允许开发者在测试类上精确控制加载哪些自动配置，而无需启动所有的自动配置。这样做可以显著提高测试的启动速度和执行效率。
+
+
+
+在大多数标准的 Spring Boot 应用中，如果你已经通过依赖管理引入了 Spring Cloud Config 或类似的库，`RefreshAutoConfiguration` 会自动被配置。然而，在某些情况下，比如进行精细的自定义配置或在测试环境中，需要显式导入 `RefreshAutoConfiguration` 以确保 `refresh` 作用域可用。这时，使用 `@ImportAutoConfiguration(RefreshAutoConfiguration.class)` 成为确保 `@RefreshScope` 可以正常工作的一个重要步骤。否则将出现` java.lang.IllegalStateException: No Scope registered for scope name 'refresh'`。
+
+
+
+
+
+如果你在编写集成测试时，希望测试 `@RefreshScope` 的功能，你可能需要在测试配置中显式导入 `RefreshAutoConfiguration`：
+
+
+
+
+
+
+
+## 一些坑
+
+1. 通过all in one jar启动可能失败并且不打印任何error日志，即日志完全正常
+
+2. 即使不使用项目的application namespace，也要发布它，这个实在令人难以理解
 
 # 3 工具
 
@@ -607,8 +694,6 @@ Log4j2 是较新的技术，其可能拥有更多关于现代日志处理特性�
 </dependency> 
 ```
 
-
-
 ## flatten-maven-plugin
 
 ```xml
@@ -674,10 +759,6 @@ Log4j2 是较新的技术，其可能拥有更多关于现代日志处理特性�
 
 这个插件将树状的引用结构打平，变量也都被替换成了真实值。
 
-
-
-
-
 # 4 问题暂存
 
 [kkrpc-core/src/main/java/cn/kimmking/kkrpc/core/consumer/KKInvocationHandler.java · ArchCamp/kkrpc - Gitee.com](https://gitee.com/ArchCamp/kkrpc/blob/V09/kkrpc-core/src/main/java/cn/kimmking/kkrpc/core/consumer/KKInvocationHandler.java)
@@ -694,17 +775,13 @@ Log4j2 是较新的技术，其可能拥有更多关于现代日志处理特性�
 
 这里第一次隔离之后就又恢复了。没有起效
 
-
-
 sonatype 主机记录使用@
 
-
-
-# Todo
+# 5 Todo
 
 - [ ] `@EnableMyrpc`
 
-- [ ]  config @v13
+- [ ] config @v13
 
 - [ ] maven central 发布项目
 
@@ -712,11 +789,7 @@ sonatype 主机记录使用@
 
 - [ ] 针对不同的服务流控，用 map； 把这个map放在redis，就可以多个节点共享（实现秒杀）
 
-
-
-
-
-# TimeTable
+# 6 TimeTable
 
 保证完全理解的前提下
 
@@ -724,10 +797,10 @@ sonatype 主机记录使用@
 
 相对独立的编码可以异步去做
 
-| video | length  | t1        | t2           | t3                                      | t4                                       | t5     | t6  | t7  |
-| ----- | ------- | --------- | ------------ | --------------------------------------- | ---------------------------------------- | ------ | --- | --- |
-| 11    | 1:30:00 | 21:25     | 21:25        | 37:09                                   | 1:05:11没敲代码 @enablerpc  ; package config | finish |     |     |
-| 12    | 101:27  | 18:49     | 29:39        | 68:06                                   |                                          |        |     |     |
-|       |         | 被临时打断了一会儿 | 认证了flhai.com | 项目发布到maven central插件；gpg; server token; |                                          |        |     |     |
-|       |         |           |              |                                         |                                          |        |     |     |
-|       |         |           |              |                                         |                                          |        |     |     |
+| video | length  | t1          | t2                | t3                                                     | t4                                       | t5     | t6  | t7  |
+| ----- | ------- | ----------- | ----------------- | ------------------------------------------------------ | ---------------------------------------- | ------ | --- | --- |
+| 11    | 1:30:00 | 21:25       | 21:25             | 37:09                                                  | 1:05:11没敲代码 @enablerpc  ; package config | finish |     |     |
+| 12    | 101:27  | 18:49       | 29:39             | 68:06                                                  |                                          |        |     |     |
+|       |         | 被临时打断了一会儿   | 认证了flhai.com      | 项目发布到maven central插件；gpg; server token;                |                                          |        |     |     |
+| 13    | 116:32  | 04:45       | 06:03             | 10:13                                                  | 33:19                                    |        |     |     |
+|       |         | 在安装配置apollo | 完成apollo mysql的配置 | 踩了坑，使用outdated 指南导致配置错误且无明显报错，花了比较长时间才解决。实际是非常简单的配置问题。 | apollo配置加载原理                             |        |     |     |
