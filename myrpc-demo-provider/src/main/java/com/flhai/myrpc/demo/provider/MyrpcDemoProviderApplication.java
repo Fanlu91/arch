@@ -25,7 +25,7 @@ public class MyrpcDemoProviderApplication {
 
     @RequestMapping("/test")
     public String test() {
-        return "origin: "+ test + " \ncurrent: " + providerProperties.getTest();
+        return "@value 注解值: "+ test + " \nproviderProperties值: " + providerProperties.getTest();
     }
 
     public static void main(String[] args) {
