@@ -60,4 +60,10 @@ public class ProviderConfig {
         log.info("refillInterval:{}, maxTokens:{}", refillInterval, maxTokens);
         return new TokenBucketLimiter(refillInterval, maxTokens);
     }
+
+    @Bean
+//    @ConditionalOnMissingBean
+    public ApolloChangedListener provider_apolloChangedListener() {
+        return new ApolloChangedListener();
+    }
 }
