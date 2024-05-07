@@ -203,9 +203,7 @@ public class ConditionalConfig {
 
 **3. 使用 ImportBeanDefinitionRegistrar 接口** `ImportBeanDefinitionRegistrar` 允许更复杂的注册逻辑。实现此接口的类可以编程方式地向Spring容器中注册bean。这对于需要API调用的复杂注册逻辑非常有用。
 
-```java
 
-```
 
 ## 7. @Configuration
 
@@ -462,6 +460,12 @@ void destroy() {
 
 # Apollo
 
+apollo 通常存放技术参数，比如线程池、流控、炒时等。
+
+业务参数应该放在业务运营系统中
+
+
+
 ## 安装配置 2.2.0版
 
 [Quick Start · apolloconfig/apollo Wiki · GitHub](https://github.com/apolloconfig/apollo/wiki/Quick-Start)
@@ -500,13 +504,21 @@ apollo_portal_db_password=${APOLLO_PORTAL_DB_PASSWORD:-Denglu01@}
 
 ## apollo的配置原理
 
+### @Value 注解引用方式
+
 Apollo 的配置项被添加到 Spring 的 `Environment` 中作为一个 `PropertySource`。
 
 - Spring environment  propertySourceList 中有各种各样的source，我们的yaml配置文件等也是一个source
 
-- property加载时类似于类加载，多个 `PropertySource`有一定的优先级顺序，优先级高的会覆盖优先级低的。Apollo的配置高于本地配置，确保对本地配置的覆盖
+- property加载时类似于类加载，多个 `PropertySource`有一定的优先级顺序，优先级高的会覆盖优先级低的（找到就返回，不会看后面的）。Apollo的配置高于本地配置，确保对本地配置的覆盖。
+
+当apollo client获取到server的更新后，会自动`environmentProperties`这个property source的值，来实现自动更新。
 
 
+
+### ConfigurationProperties 引用方式
+
+这种方式是更常用的，但是存在问题在于ConfigurationProperties 在第一次加载完之后值都在bean中，Apollo server端修改值之后，并不能直接更新bean的值。需要通过刷新bean的方式来实现自动配置更新。
 
 
 
@@ -531,7 +543,11 @@ public class ProviderProperties {
 
 `@RefreshScope` 是由 Spring Cloud 提供的一个功能，它用于动态刷新配置。当使用配置中心（如 Apollo, Consul, Spring Cloud Config Server 等）时，`@RefreshScope` 可以确保 Bean 在配置更改时能够被重新初始化，从而使用最新的配置值。这对于运行时配置的动态更新非常有用。
 
+- springboot 默认认为所有的配置应当是静态配置，不支持动态配置调整，因此Refresh scope放在了spring cloud项目中
 
+- 标记了@RefreshScope 的bean在创建时会多加一层代理，实现配置刷新。
+
+- 走的是context.refresh事件，将bean重新构建
 
 
 
@@ -759,48 +775,16 @@ Log4j2 是较新的技术，其可能拥有更多关于现代日志处理特性�
 
 这个插件将树状的引用结构打平，变量也都被替换成了真实值。
 
-# 4 问题暂存
-
-[kkrpc-core/src/main/java/cn/kimmking/kkrpc/core/consumer/KKInvocationHandler.java · ArchCamp/kkrpc - Gitee.com](https://gitee.com/ArchCamp/kkrpc/blob/V09/kkrpc-core/src/main/java/cn/kimmking/kkrpc/core/consumer/KKInvocationHandler.java)
-
-```java
-                synchronized (providers) {
-                    if (!providers.contains(instance)) {
-                        isolatedProviders.remove(instance);
-                        providers.add(instance);
-                        log.debug("instance {} is recovered, isolatedProviders={}, providers={}", instance, isolatedProviders, providers);
-                    }
-                }
-```
-
-这里第一次隔离之后就又恢复了。没有起效
-
-sonatype 主机记录使用@
-
-# 5 Todo
+# 4 Todo
 
 - [ ] `@EnableMyrpc`
 
-- [ ] config @v13
+- [x] config @v13
 
 - [ ] maven central 发布项目
 
-- [ ] traffic control of provider with time winodw； 
+- [x] traffic control of provider with time winodw； 
 
-- [ ] 针对不同的服务流控，用 map； 把这个map放在redis，就可以多个节点共享（实现秒杀）
+- [ ] 针对不同的服务流控，用 map； 把这个map放在redis，就可以多个节点共享（实现秒杀） 
 
-# 6 TimeTable
-
-保证完全理解的前提下
-
-以尽量快的速度完成
-
-相对独立的编码可以异步去做
-
-| video | length  | t1          | t2                | t3                                                     | t4                                       | t5     | t6  | t7  |
-| ----- | ------- | ----------- | ----------------- | ------------------------------------------------------ | ---------------------------------------- | ------ | --- | --- |
-| 11    | 1:30:00 | 21:25       | 21:25             | 37:09                                                  | 1:05:11没敲代码 @enablerpc  ; package config | finish |     |     |
-| 12    | 101:27  | 18:49       | 29:39             | 68:06                                                  |                                          |        |     |     |
-|       |         | 被临时打断了一会儿   | 认证了flhai.com      | 项目发布到maven central插件；gpg; server token;                |                                          |        |     |     |
-| 13    | 116:32  | 04:45       | 06:03             | 10:13                                                  | 33:19                                    |        |     |     |
-|       |         | 在安装配置apollo | 完成apollo mysql的配置 | 踩了坑，使用outdated 指南导致配置错误且无明显报错，花了比较长时间才解决。实际是非常简单的配置问题。 | apollo配置加载原理                             |        |     |     |
+- [ ] 使用apollo 配置ConsumerProperties
