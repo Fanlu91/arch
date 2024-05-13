@@ -1,9 +1,8 @@
-package com.flhai.myrpc.core.api;
+package com.flhai.myrpc.core.registry;
 
 
 import com.flhai.myrpc.core.meta.InstanceMeta;
 import com.flhai.myrpc.core.meta.ServiceMeta;
-import com.flhai.myrpc.core.registry.ChangedListener;
 
 import java.util.List;
 

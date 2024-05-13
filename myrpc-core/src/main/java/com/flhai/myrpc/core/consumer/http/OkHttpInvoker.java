@@ -7,6 +7,7 @@ import com.flhai.myrpc.core.consumer.HttpInvoker;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
 
+import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
@@ -24,7 +25,6 @@ public class OkHttpInvoker implements HttpInvoker {
                 .build();
     }
 
-    @Override
     public RpcResponse<?> post(RpcRequest rpcRequest, String url) {
         String reqJson = JSON.toJSONString(rpcRequest);
         log.debug("post reqJson = " + reqJson);
@@ -40,6 +40,37 @@ public class OkHttpInvoker implements HttpInvoker {
             log.error("ClassCastException while post: ", e);
             throw e;
         } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public String post(String requestString, String url) {
+        String reqJson = JSON.toJSONString(requestString);
+        log.debug("post reqJson = " + reqJson);
+        Request request = new Request.Builder()
+                .url(url)
+                .post(RequestBody.create(reqJson, JSONTYPE))
+                .build();
+
+        try {
+            String responseJson = okHttpClient.newCall(request).execute().body().string();
+            return responseJson;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public String get(String url) {
+        Request request = new Request.Builder()
+                .url(url)
+                .get()
+                .build();
+        try {
+            String responseJson = okHttpClient.newCall(request).execute().body().string();
+            log.debug("responseJson = " + responseJson);
+            return responseJson;
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }

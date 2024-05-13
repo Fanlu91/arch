@@ -1,7 +1,7 @@
 package com.flhai.myrpc.core.registry.zk;
 
 import com.alibaba.fastjson.JSON;
-import com.flhai.myrpc.core.api.RegistryCenter;
+import com.flhai.myrpc.core.registry.RegistryCenter;
 import com.flhai.myrpc.core.api.RpcException;
 import com.flhai.myrpc.core.meta.InstanceMeta;
 import com.flhai.myrpc.core.meta.ServiceMeta;

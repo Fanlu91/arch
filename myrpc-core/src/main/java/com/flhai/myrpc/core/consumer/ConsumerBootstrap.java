@@ -1,7 +1,7 @@
 package com.flhai.myrpc.core.consumer;
 
 import com.flhai.myrpc.core.annotation.MyConsumer;
-import com.flhai.myrpc.core.api.RegistryCenter;
+import com.flhai.myrpc.core.registry.RegistryCenter;
 import com.flhai.myrpc.core.api.RpcContext;
 import com.flhai.myrpc.core.api.RpcException;
 import com.flhai.myrpc.core.meta.InstanceMeta;

@@ -1,7 +1,7 @@
 package com.flhai.myrpc.core.provider;
 
 import com.flhai.myrpc.core.annotation.MyProvider;
-import com.flhai.myrpc.core.api.RegistryCenter;
+import com.flhai.myrpc.core.registry.RegistryCenter;
 import com.flhai.myrpc.core.config.AppProperties;
 import com.flhai.myrpc.core.config.ProviderProperties;
 import com.flhai.myrpc.core.meta.InstanceMeta;

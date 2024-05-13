@@ -5,6 +5,7 @@ import com.flhai.myrpc.core.cluster.GreyRouter;
 import com.flhai.myrpc.core.cluster.RoundRibonLoadBalancer;
 import com.flhai.myrpc.core.consumer.ConsumerBootstrap;
 import com.flhai.myrpc.core.filter.ParameterFilter;
+import com.flhai.myrpc.core.registry.RegistryCenter;
 import com.flhai.myrpc.core.registry.zk.ZkRegistryCenter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationRunner;

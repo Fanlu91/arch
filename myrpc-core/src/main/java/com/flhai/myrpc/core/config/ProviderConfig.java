@@ -1,6 +1,6 @@
 package com.flhai.myrpc.core.config;
 
-import com.flhai.myrpc.core.api.RegistryCenter;
+import com.flhai.myrpc.core.registry.RegistryCenter;
 import com.flhai.myrpc.core.provider.ProviderBootstrap;
 import com.flhai.myrpc.core.provider.ProviderInvoker;
 import com.flhai.myrpc.core.provider.TokenBucketLimiter;

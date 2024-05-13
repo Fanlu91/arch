@@ -52,6 +52,10 @@ public class InstanceMeta {
         return String.format("%s:%d", host, port);
     }
 
+    public String toMetaString() {
+        return JSON.toJSONString(this);
+    }
+
     public String getParamsAsJson() {
         return JSON.toJSONString(this.getParams());
     }

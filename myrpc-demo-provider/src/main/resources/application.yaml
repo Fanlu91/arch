@@ -17,6 +17,9 @@ myrpc:
       refillInterval: 300000
       maxToken: 3
 
+myregistry:
+  servers: http://localhost:8484
+
 logging:
   level:
     root: INFO
@@ -27,7 +30,7 @@ logging:
 
 app:
   id: app1
-apollo:    #  http://172.20.10.4:8080/configs/app1/default/namespace1?ip=172.20.10.4
+apollo: #  http://172.20.10.4:8080/configs/app1/default/namespace1?ip=172.20.10.4
   cacheDir: /opt/data/                       #配置本地配置缓存目录
   cluster: default                           #指定使用哪个集群的配置
   meta: http://localhost:8080                #DEV环境配置中心地址
