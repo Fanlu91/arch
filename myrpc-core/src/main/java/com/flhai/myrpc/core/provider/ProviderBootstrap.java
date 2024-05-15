@@ -64,7 +64,7 @@ public class ProviderBootstrap implements ApplicationContextAware {
     public void start() {
         registryCenter.start();
         instance = new InstanceMeta(InetAddress.getLocalHost().getHostAddress(), Integer.parseInt(port));
-        instance.getParams().putAll(providerProperties.getMetas());
+        instance.getParameters().putAll(providerProperties.getMetas());
         skeleton.keySet().forEach(this::registerProvider);
     }
 

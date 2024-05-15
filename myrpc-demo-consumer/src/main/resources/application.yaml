@@ -15,10 +15,14 @@ myrpc:
     faultLimit: 10 # 30s 内10次错误则隔离
     halfOpenInitialDelay: 10000
     halfOpenDelay: 60000
+myregistry:
+  servers: http://localhost:8484
+
 logging:
   level:
     root: INFO
     org.springframework: INFO
     com.flhai: DEBUG
+    com.flhai.myrpc.core.http: INFO
   pattern:
     console: "%d{HH:mm:ss} %-5level - %msg%n"

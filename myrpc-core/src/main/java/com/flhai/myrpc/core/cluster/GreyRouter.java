@@ -39,7 +39,7 @@ public class GreyRouter implements Router<InstanceMeta> {
         List<InstanceMeta> normalNodes = new ArrayList<>();
         List<InstanceMeta> greyNodes = new ArrayList<>();
         for (InstanceMeta provider : providers) {
-            if (provider.getParams().get("grey").equals("true")) {
+            if (provider.getParameters().get("grey").equals("true")) {
                 greyNodes.add(provider);
             } else {
                 normalNodes.add(provider);

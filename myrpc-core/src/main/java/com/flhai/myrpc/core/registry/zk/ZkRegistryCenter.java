@@ -63,7 +63,7 @@ public class ZkRegistryCenter implements RegistryCenter {
             }
             String instancePath = servicePath + "/" + instance.toZkPath();
             log.info("===>register instance to zk : " + instancePath);
-            client.create().withMode(CreateMode.EPHEMERAL).forPath(instancePath, instance.getParamsAsJson().getBytes());
+            client.create().withMode(CreateMode.EPHEMERAL).forPath(instancePath, instance.paramsToJson().getBytes());
         } catch (Exception e) {
             throw new RpcException(e);
         }
@@ -119,7 +119,7 @@ public class ZkRegistryCenter implements RegistryCenter {
             }
             Map params = JSON.parseObject(new String(bytes), Map.class);
             params.forEach((k, v) -> System.out.println(k + " --> " + v));
-            instanceMeta.setParams(params);
+            instanceMeta.setParameters(params);
             return instanceMeta;
         }).collect(Collectors.toList());
     }

@@ -1,12 +1,15 @@
 package com.flhai.myrpc.core.config;
 
-import com.flhai.myrpc.core.api.*;
+import com.flhai.myrpc.core.api.Filter;
+import com.flhai.myrpc.core.api.LoadBalancer;
+import com.flhai.myrpc.core.api.Router;
+import com.flhai.myrpc.core.api.RpcContext;
 import com.flhai.myrpc.core.cluster.GreyRouter;
 import com.flhai.myrpc.core.cluster.RoundRibonLoadBalancer;
 import com.flhai.myrpc.core.consumer.ConsumerBootstrap;
 import com.flhai.myrpc.core.filter.ParameterFilter;
 import com.flhai.myrpc.core.registry.RegistryCenter;
-import com.flhai.myrpc.core.registry.zk.ZkRegistryCenter;
+import com.flhai.myrpc.core.registry.my.MyRegistryCenter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Bean;
@@ -26,8 +29,6 @@ public class ConsumerConfig {
     @Autowired
     AppProperties appProperties;
 
-//    @Value("${myrpc.providers}")
-//    String services;
 
     @Bean
     public ConsumerBootstrap consumerBootstrap() {
@@ -57,8 +58,9 @@ public class ConsumerConfig {
     @Bean(initMethod = "start", destroyMethod = "stop")
     public RegistryCenter consumerRegistryCenter() {
 //        return new RegistryCenter.StaticRegistryCenter(List.of(services.split(",")));
-        return new ZkRegistryCenter();
+        return new MyRegistryCenter();
     }
+
 
 //    @Bean
 //    public Filter filter1() {

@@ -1,7 +1,8 @@
 package com.flhai.myrpc.core.consumer;
 
 import com.flhai.myrpc.core.api.*;
-import com.flhai.myrpc.core.consumer.http.OkHttpInvoker;
+import com.flhai.myrpc.core.http.HttpInvoker;
+import com.flhai.myrpc.core.http.OkHttpInvoker;
 import com.flhai.myrpc.core.governance.SlidingTimeWindow;
 import com.flhai.myrpc.core.meta.InstanceMeta;
 import com.flhai.myrpc.core.util.MethodUtils;

@@ -1,7 +1,7 @@
 package com.flhai.myrpc.core.registry.my;
 
 import com.alibaba.fastjson.TypeReference;
-import com.flhai.myrpc.core.consumer.HttpInvoker;
+import com.flhai.myrpc.core.http.HttpInvoker;
 import com.flhai.myrpc.core.meta.InstanceMeta;
 import com.flhai.myrpc.core.meta.ServiceMeta;
 import com.flhai.myrpc.core.registry.ChangedListener;
@@ -30,7 +30,6 @@ public class MyRegistryCenter implements RegistryCenter {
     public void start() {
         log.info("==> start my registry client with servers: {}", servers);
         scheduledExecutorService = Executors.newScheduledThreadPool(1);
-
     }
 
     @Override
@@ -49,7 +48,7 @@ public class MyRegistryCenter implements RegistryCenter {
 
     @Override
     public void register(ServiceMeta serviceName, InstanceMeta instance) {
-        log.info("==> register service: {} instance: {}", serviceName, instance);
+        log.info("==> register service: {} instance: {}", serviceName.toPath(), instance);
         HttpInvoker.httpPost(instance.toMetaString(), servers + "/register?service=" + serviceName.toPath(), InstanceMeta.class);
     }
 
@@ -60,26 +59,26 @@ public class MyRegistryCenter implements RegistryCenter {
     }
 
     @Override
-    public List<InstanceMeta> fetchAll(ServiceMeta serviceName) {
-        log.info("==> fetch all instances of service: {}", serviceName);
-        List<InstanceMeta> instanceMetaList = HttpInvoker.httpGet(servers + "/findAll?service=" + serviceName.toPath(), new TypeReference<List<InstanceMeta>>() {
+    public List<InstanceMeta> fetchAll(ServiceMeta serviceMeta) {
+        log.info("==> fetch all instances of service: {}", serviceMeta.toPath());
+        List<InstanceMeta> instanceMetaList = HttpInvoker.httpGet(servers + "/findAll?service=" + serviceMeta.toPath(), new TypeReference<List<InstanceMeta>>() {
         });
-        log.info("==> fetch all instances of service: {} result: {}", serviceName, instanceMetaList);
+        log.info("==> fetch all instances of service: {} result: {}", serviceMeta, instanceMetaList);
         return instanceMetaList;
     }
 
 
     @Override
-    public void subscribe(ServiceMeta serviceName, ChangedListener listener) {
-        log.info("==> subscribe service: {}", serviceName);
+    public void subscribe(ServiceMeta serviceMeta, ChangedListener listener) {
+        log.info("==> subscribe service: {}", serviceMeta.toPath());
         scheduledExecutorService.scheduleAtFixedRate(() -> {
-            Long version = VERSIONS.getOrDefault(serviceName.toPath(), -1L);
-            Long remoteVersion = HttpInvoker.httpGet(servers + "/version?service=" + serviceName.toPath(), Long.class);
+            Long version = VERSIONS.getOrDefault(serviceMeta.toPath(), -1L);
+            Long remoteVersion = HttpInvoker.httpGet(servers + "/version?service=" + serviceMeta.toPath(), Long.class);
             if (remoteVersion > version) {
-                List<InstanceMeta> instanceMetaList = fetchAll(serviceName);
-                log.debug("==> service: {} changed, old version: {}, new version: {}, instances: {}", serviceName, version, remoteVersion, instanceMetaList);
+                List<InstanceMeta> instanceMetaList = fetchAll(serviceMeta);
+                log.info("==> service: {} changed, old version: {}, new version: {}, instances: {}", serviceMeta, version, remoteVersion, instanceMetaList);
                 listener.fireChange(new Event(instanceMetaList));
-                VERSIONS.put(serviceName.toPath(), remoteVersion);
+                VERSIONS.put(serviceMeta.toPath(), remoteVersion);
             }
         }, 1, 5, TimeUnit.SECONDS);
     }

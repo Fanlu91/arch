@@ -1,10 +1,10 @@
 package com.flhai.myrpc.core.config;
 
-import com.flhai.myrpc.core.registry.RegistryCenter;
 import com.flhai.myrpc.core.provider.ProviderBootstrap;
 import com.flhai.myrpc.core.provider.ProviderInvoker;
 import com.flhai.myrpc.core.provider.TokenBucketLimiter;
-import com.flhai.myrpc.core.registry.zk.ZkRegistryCenter;
+import com.flhai.myrpc.core.registry.RegistryCenter;
+import com.flhai.myrpc.core.registry.my.MyRegistryCenter;
 import com.flhai.myrpc.core.transport.SpringBootTransport;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,9 +34,15 @@ public class ProviderConfig {
         return new ProviderInvoker(providerBootstrap);
     }
 
-    @Bean()
-    public RegistryCenter providerRegistryCenter() {
-        return new ZkRegistryCenter();
+//    @Bean
+//    @ConditionalOnMissingBean
+//    public RegistryCenter zkProviderRegistryCenter() {
+//        return new ZkRegistryCenter();
+//    }
+
+    @Bean
+    public RegistryCenter myProviderRegistryCenter() {
+        return new MyRegistryCenter();
     }
 
     @Bean
@@ -61,9 +67,9 @@ public class ProviderConfig {
         return new TokenBucketLimiter(refillInterval, maxTokens);
     }
 
-    @Bean
+//    @Bean
 //    @ConditionalOnMissingBean
-    public ApolloChangedListener provider_apolloChangedListener() {
-        return new ApolloChangedListener();
-    }
+//    public ApolloChangedListener provider_apolloChangedListener() {
+//        return new ApolloChangedListener();
+//    }
 }
