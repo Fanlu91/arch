@@ -15,9 +15,6 @@ import org.springframework.util.MultiValueMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -25,53 +22,38 @@ public class MyRegistryCenter implements RegistryCenter {
 
     @Value("${myregistry.servers:}")
     private String servers;
-
     Map<String, Long> VERSIONS = new HashMap<>();
     MultiValueMap<InstanceMeta, ServiceMeta> RENEWS = new LinkedMultiValueMap<>();
-    ScheduledExecutorService consumerExecutorService = null;
-    ScheduledExecutorService providerExecutorService = null;
+    MyHealthChecker healthChecker = new MyHealthChecker();
 
     @Override
     public void start() {
         log.info("==> start my registry client with servers: {}", servers);
-        consumerExecutorService = Executors.newScheduledThreadPool(1);
-        providerExecutorService = Executors.newScheduledThreadPool(1);
-
-        providerExecutorService.scheduleAtFixedRate(() -> {
-            log.debug("==> renew all instances");
-            RENEWS.forEach((instance , serviceNames) -> {
-                log.debug("==> renew instance: {} for {} services", instance.toUrl(), serviceNames.size());
-                try {
-                    String servicesAsString = String.join((CharSequence) ",", serviceNames.stream().map(x -> x.toPath()).collect(Collectors.toList()));
-                    if (servicesAsString.endsWith(",")) {
-                        servicesAsString = servicesAsString.substring(0, servicesAsString.length() - 1);
-                    }
-                    HttpInvoker.httpPost(instance.toMetaString(), servers + "/renews?services=" + servicesAsString, String.class);
-                } catch (Exception e) {
-                    log.error("==> renew instance: {} for {} services failed", instance.toUrl(), serviceNames.size(), e);
-                }
-            });
-        }, 5, 5, TimeUnit.SECONDS);
+        healthChecker.start();
+        healthChecker.providerCheck(this::providerRenew);
     }
 
     @Override
     public void stop() {
         log.info("==> stop my registry client with servers: {}", servers);
-        gracefulShutdown(consumerExecutorService);
-        gracefulShutdown(providerExecutorService);
+        healthChecker.stop();
     }
 
-    private void gracefulShutdown(ScheduledExecutorService executorService) {
-        executorService.shutdown();
-        try {
-            executorService.awaitTermination(1, TimeUnit.SECONDS);
-            if (!executorService.isTerminated()) {
-                executorService.shutdownNow();
+    public void providerRenew() {
+        RENEWS.forEach((instance, serviceNames) -> {
+            log.debug("==> renew instance: {} for {} services", instance.toUrl(), serviceNames.size());
+            try {
+                String servicesAsString = String.join((CharSequence) ",", serviceNames.stream().map(x -> x.toPath()).collect(Collectors.toList()));
+                if (servicesAsString.endsWith(",")) {
+                    servicesAsString = servicesAsString.substring(0, servicesAsString.length() - 1);
+                }
+                HttpInvoker.httpPost(instance.toMetaString(), servers + "/renews?services=" + servicesAsString, String.class);
+            } catch (Exception e) {
+                log.error("==> renew instance: {} for {} services failed", instance.toUrl(), serviceNames.size(), e);
             }
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
+        });
     }
+
 
     @Override
     public void register(ServiceMeta serviceName, InstanceMeta instance) {
@@ -99,15 +81,17 @@ public class MyRegistryCenter implements RegistryCenter {
     @Override
     public void subscribe(ServiceMeta serviceMeta, ChangedListener listener) {
         log.info("==> subscribe service: {}", serviceMeta.toPath());
-        consumerExecutorService.scheduleAtFixedRate(() -> {
-            Long version = VERSIONS.getOrDefault(serviceMeta.toPath(), -1L);
-            Long remoteVersion = HttpInvoker.httpGet(servers + "/version?service=" + serviceMeta.toPath(), Long.class);
-            if (remoteVersion > version) {
-                List<InstanceMeta> instanceMetaList = fetchAll(serviceMeta);
-                log.info("==> service: {} changed, old version: {}, new version: {}, instances: {}", serviceMeta, version, remoteVersion, instanceMetaList);
-                listener.fireChange(new Event(instanceMetaList));
-                VERSIONS.put(serviceMeta.toPath(), remoteVersion);
-            }
-        }, 1, 5, TimeUnit.SECONDS);
+        healthChecker.consumerCheck(() -> consumerRenew(serviceMeta, listener));
+    }
+
+    public void consumerRenew(ServiceMeta serviceMeta, ChangedListener listener) {
+        Long version = VERSIONS.getOrDefault(serviceMeta.toPath(), -1L);
+        Long remoteVersion = HttpInvoker.httpGet(servers + "/version?service=" + serviceMeta.toPath(), Long.class);
+        if (remoteVersion > version) {
+            List<InstanceMeta> instanceMetaList = fetchAll(serviceMeta);
+            log.info("==> service: {} changed, old version: {}, new version: {}, instances: {}", serviceMeta, version, remoteVersion, instanceMetaList);
+            listener.fireChange(new Event(instanceMetaList));
+            VERSIONS.put(serviceMeta.toPath(), remoteVersion);
+        }
     }
 }
