@@ -1,5 +1,6 @@
 package com.flhai.myrpc.demo.provider;
 
+import com.flhai.myconfig.client.annotation.EnableMyConfig;
 import com.flhai.myrpc.core.config.ProviderConfig;
 import com.flhai.myrpc.core.config.ProviderProperties;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Import({ProviderConfig.class})
 @RestController
 //@EnableApolloConfig
+@EnableMyConfig
 public class MyrpcDemoProviderApplication {
 
     @Value("${myrpc.provider.test}")

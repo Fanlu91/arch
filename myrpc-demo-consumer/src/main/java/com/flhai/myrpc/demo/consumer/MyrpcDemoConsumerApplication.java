@@ -1,5 +1,6 @@
 package com.flhai.myrpc.demo.consumer;
 
+import com.flhai.myconfig.client.annotation.EnableMyConfig;
 import com.flhai.myrpc.core.annotation.MyConsumer;
 import com.flhai.myrpc.core.api.Router;
 import com.flhai.myrpc.core.api.RpcContext;
@@ -27,6 +28,7 @@ import java.util.Map;
 @SpringBootApplication
 @RestController
 @Slf4j
+@EnableMyConfig
 public class MyrpcDemoConsumerApplication {
 
     // 如果@Autowired，就是本地调用

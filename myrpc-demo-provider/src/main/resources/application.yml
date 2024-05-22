@@ -1,0 +1,27 @@
+logging:
+    level:
+        com:
+            flhai: DEBUG
+        org:
+            springframework: INFO
+        root: INFO
+myregistry:
+    servers: http://localhost:8484
+myrpc:
+    app:
+        env: dev
+        id: app1
+        namespace: public
+    provider:
+        metas:
+            dc: dc0
+            grey: false
+            maxToken: 3
+            refillInterval: 300000
+            unit: unit0
+        test: from_yaml
+    zk:
+        namespace: myrpc
+        servers: localhost:2181
+server:
+    port: 8080

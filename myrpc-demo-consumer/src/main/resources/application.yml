@@ -1,0 +1,29 @@
+logging:
+    level:
+        com:
+            flhai: DEBUG
+            flhai.myrpc.core.http: INFO
+        org:
+            springframework: INFO
+        root: INFO
+    pattern:
+        console: '%d{HH:mm:ss} %-5level - %msg%n'
+myregistry:
+    servers: http://localhost:8484
+myrpc:
+    app:
+        env: dev
+        id: app1
+        namespace: public
+    consumer:
+        faultLimit: 10
+        greyRatio: 10
+        halfOpenDelay: 60000
+        halfOpenInitialDelay: 10000
+        retries: 2
+        timeout: 1000
+    zk:
+        namespace: myrpc
+        servers: localhost:2181
+server:
+    port: 9088
