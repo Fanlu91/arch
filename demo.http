@@ -1,11 +1,11 @@
 ### get user info
-POST http://localhost:8080
+POST http://localhost:8081/myrpc
 Content-Type: application/json
 
 {
   "service": "com.flhai.myrpc.demo.api.UserService",
   "methodSign": "findById@1_int",
-  "params": [1001]
+  "args": [1001]
 }
 
 ### get order info
